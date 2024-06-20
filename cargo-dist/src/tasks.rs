@@ -2634,7 +2634,7 @@ impl DistGraph {
 pub fn gather_work(cfg: &Config) -> DistResult<(DistGraph, DistManifest)> {
     info!("analyzing workspace:");
     let tools = tool_info()?;
-    let mut workspaces = crate::config::get_project2()?;
+    let mut workspaces = crate::config::get_project()?;
     let system_id = format!(
         "{}:{}:{}",
         cfg.root_cmd,
