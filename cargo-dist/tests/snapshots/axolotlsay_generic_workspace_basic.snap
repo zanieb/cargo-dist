@@ -22,8 +22,8 @@ fi
 set -u
 
 APP_NAME="axolotlsay-js"
-APP_VERSION="0.8.0"
-ARTIFACT_DOWNLOAD_URL="${INSTALLER_DOWNLOAD_URL:-https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.8.0}"
+APP_VERSION="0.9.0"
+ARTIFACT_DOWNLOAD_URL="${INSTALLER_DOWNLOAD_URL:-https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.9.0}"
 PRINT_VERBOSE=${INSTALLER_PRINT_VERBOSE:-0}
 PRINT_QUIET=${INSTALLER_PRINT_QUIET:-0}
 NO_MODIFY_PATH=${INSTALLER_NO_MODIFY_PATH:-0}
@@ -44,10 +44,10 @@ usage() {
     cat <<EOF
 axolotlsay-js-installer.sh
 
-The installer for axolotlsay-js 0.8.0
+The installer for axolotlsay-js 0.9.0
 
 This script detects what platform you're on and fetches an appropriate archive from
-https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.8.0
+https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.9.0
 then unpacks the binaries and installs them to
 
     \$CARGO_HOME/bin (or \$HOME/.cargo/bin)
@@ -996,13 +996,13 @@ download_binary_and_run_installer "$@" || exit 1
 class AxolotlsayJs < Formula
   desc "JavaScript port of axolotlsay"
   homepage "https://github.com/axodotdev/axolotlsay-hybrid"
-  version "0.8.0"
+  version "0.9.0"
   if OS.mac?
-    url "https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.8.0/axolotlsay-js-x86_64-apple-darwin.tar.xz"
+    url "https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.9.0/axolotlsay-js-x86_64-apple-darwin.tar.xz"
   end
   if OS.linux?
     if Hardware::CPU.intel?
-      url "https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.8.0/axolotlsay-js-x86_64-unknown-linux-gnu.tar.xz"
+      url "https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.9.0/axolotlsay-js-x86_64-unknown-linux-gnu.tar.xz"
     end
   end
   license "MIT"
@@ -1056,12 +1056,12 @@ end
 <#
 .SYNOPSIS
 
-The installer for axolotlsay-js 0.8.0
+The installer for axolotlsay-js 0.9.0
 
 .DESCRIPTION
 
 This script detects what platform you're on and fetches an appropriate archive from
-https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.8.0
+https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.9.0
 then unpacks the binaries and installs them to
 
     $env:CARGO_HOME/bin (or $HOME/.cargo/bin)
@@ -1081,7 +1081,7 @@ Print help
 
 param (
     [Parameter(HelpMessage = "The URL of the directory where artifacts can be fetched from")]
-    [string]$ArtifactDownloadUrl = 'https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.8.0',
+    [string]$ArtifactDownloadUrl = 'https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.9.0',
     [Parameter(HelpMessage = "Don't add the install directory to PATH")]
     [switch]$NoModifyPath,
     [Parameter(HelpMessage = "Print Help")]
@@ -1089,7 +1089,7 @@ param (
 )
 
 $app_name = 'axolotlsay-js'
-$app_version = '0.8.0'
+$app_version = '0.9.0'
 
 $receipt = @"
 {"binaries":["CARGO_DIST_BINS"],"binary_aliases":{},"install_prefix":"AXO_INSTALL_PREFIX","provider":{"source":"cargo-dist","version":"CENSORED"},"source":{"app_name":"axolotlsay-js","name":"axolotlsay-hybrid","owner":"axodotdev","release_type":"github"},"version":"CENSORED"}
@@ -1459,8 +1459,8 @@ fi
 set -u
 
 APP_NAME="axolotlsay"
-APP_VERSION="0.8.0"
-ARTIFACT_DOWNLOAD_URL="${INSTALLER_DOWNLOAD_URL:-https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.8.0}"
+APP_VERSION="0.9.0"
+ARTIFACT_DOWNLOAD_URL="${INSTALLER_DOWNLOAD_URL:-https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.9.0}"
 PRINT_VERBOSE=${INSTALLER_PRINT_VERBOSE:-0}
 PRINT_QUIET=${INSTALLER_PRINT_QUIET:-0}
 NO_MODIFY_PATH=${INSTALLER_NO_MODIFY_PATH:-0}
@@ -1481,10 +1481,10 @@ usage() {
     cat <<EOF
 axolotlsay-installer.sh
 
-The installer for axolotlsay 0.8.0
+The installer for axolotlsay 0.9.0
 
 This script detects what platform you're on and fetches an appropriate archive from
-https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.8.0
+https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.9.0
 then unpacks the binaries and installs them to
 
     \$CARGO_HOME/bin (or \$HOME/.cargo/bin)
@@ -2433,13 +2433,13 @@ download_binary_and_run_installer "$@" || exit 1
 class Axolotlsay < Formula
   desc "💬 a CLI for learning to distribute CLIs in rust"
   homepage "https://github.com/axodotdev/axolotlsay-hybrid"
-  version "0.8.0"
+  version "0.9.0"
   if OS.mac?
-    url "https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.8.0/axolotlsay-x86_64-apple-darwin.tar.xz"
+    url "https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.9.0/axolotlsay-x86_64-apple-darwin.tar.xz"
   end
   if OS.linux?
     if Hardware::CPU.intel?
-      url "https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.8.0/axolotlsay-x86_64-unknown-linux-gnu.tar.xz"
+      url "https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.9.0/axolotlsay-x86_64-unknown-linux-gnu.tar.xz"
     end
   end
   license "MIT OR Apache-2.0"
@@ -2493,12 +2493,12 @@ end
 <#
 .SYNOPSIS
 
-The installer for axolotlsay 0.8.0
+The installer for axolotlsay 0.9.0
 
 .DESCRIPTION
 
 This script detects what platform you're on and fetches an appropriate archive from
-https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.8.0
+https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.9.0
 then unpacks the binaries and installs them to
 
     $env:CARGO_HOME/bin (or $HOME/.cargo/bin)
@@ -2518,7 +2518,7 @@ Print help
 
 param (
     [Parameter(HelpMessage = "The URL of the directory where artifacts can be fetched from")]
-    [string]$ArtifactDownloadUrl = 'https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.8.0',
+    [string]$ArtifactDownloadUrl = 'https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.9.0',
     [Parameter(HelpMessage = "Don't add the install directory to PATH")]
     [switch]$NoModifyPath,
     [Parameter(HelpMessage = "Print Help")]
@@ -2526,7 +2526,7 @@ param (
 )
 
 $app_name = 'axolotlsay'
-$app_version = '0.8.0'
+$app_version = '0.9.0'
 
 $receipt = @"
 {"binaries":["CARGO_DIST_BINS"],"binary_aliases":{},"install_prefix":"AXO_INSTALL_PREFIX","provider":{"source":"cargo-dist","version":"CENSORED"},"source":{"app_name":"axolotlsay","name":"axolotlsay-hybrid","owner":"axodotdev","release_type":"github"},"version":"CENSORED"}
@@ -2879,15 +2879,15 @@ try {
 ================ dist-manifest.json ================
 {
   "dist_version": "CENSORED",
-  "announcement_tag": "v0.8.0",
+  "announcement_tag": "v0.9.0",
   "announcement_tag_is_implicit": true,
   "announcement_is_prerelease": false,
-  "announcement_title": "v0.8.0",
-  "announcement_github_body": "# axolotlsay-js 0.8.0\n\n## Install axolotlsay-js 0.8.0\n\n### Install prebuilt binaries via shell script\n\n```sh\ncurl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.8.0/axolotlsay-js-installer.sh | sh\n```\n\n### Install prebuilt binaries via powershell script\n\n```sh\npowershell -c \"irm https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.8.0/axolotlsay-js-installer.ps1 | iex\"\n```\n\n### Install prebuilt binaries via Homebrew\n\n```sh\nbrew install axodotdev/packages/axolotlsay-js\n```\n\n## Download axolotlsay-js 0.8.0\n\n|  File  | Platform | Checksum |\n|--------|----------|----------|\n| [axolotlsay-js-x86_64-apple-darwin.tar.xz](https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.8.0/axolotlsay-js-x86_64-apple-darwin.tar.xz) | Intel macOS | [checksum](https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.8.0/axolotlsay-js-x86_64-apple-darwin.tar.xz.sha256) |\n| [axolotlsay-js-x86_64-pc-windows-msvc.zip](https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.8.0/axolotlsay-js-x86_64-pc-windows-msvc.zip) | x64 Windows | [checksum](https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.8.0/axolotlsay-js-x86_64-pc-windows-msvc.zip.sha256) |\n| [axolotlsay-js-x86_64-unknown-linux-gnu.tar.xz](https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.8.0/axolotlsay-js-x86_64-unknown-linux-gnu.tar.xz) | x64 Linux | [checksum](https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.8.0/axolotlsay-js-x86_64-unknown-linux-gnu.tar.xz.sha256) |\n\n# axolotlsay 0.8.0\n\n## Install axolotlsay 0.8.0\n\n### Install prebuilt binaries via shell script\n\n```sh\ncurl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.8.0/axolotlsay-installer.sh | sh\n```\n\n### Install prebuilt binaries via powershell script\n\n```sh\npowershell -c \"irm https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.8.0/axolotlsay-installer.ps1 | iex\"\n```\n\n### Install prebuilt binaries via Homebrew\n\n```sh\nbrew install axodotdev/packages/axolotlsay\n```\n\n## Download axolotlsay 0.8.0\n\n|  File  | Platform | Checksum |\n|--------|----------|----------|\n| [axolotlsay-x86_64-apple-darwin.tar.xz](https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.8.0/axolotlsay-x86_64-apple-darwin.tar.xz) | Intel macOS | [checksum](https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.8.0/axolotlsay-x86_64-apple-darwin.tar.xz.sha256) |\n| [axolotlsay-x86_64-pc-windows-msvc.zip](https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.8.0/axolotlsay-x86_64-pc-windows-msvc.zip) | x64 Windows | [checksum](https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.8.0/axolotlsay-x86_64-pc-windows-msvc.zip.sha256) |\n| [axolotlsay-x86_64-unknown-linux-gnu.tar.xz](https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.8.0/axolotlsay-x86_64-unknown-linux-gnu.tar.xz) | x64 Linux | [checksum](https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.8.0/axolotlsay-x86_64-unknown-linux-gnu.tar.xz.sha256) |\n\n",
+  "announcement_title": "v0.9.0",
+  "announcement_github_body": "# axolotlsay-js 0.9.0\n\n## Install axolotlsay-js 0.9.0\n\n### Install prebuilt binaries via shell script\n\n```sh\ncurl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.9.0/axolotlsay-js-installer.sh | sh\n```\n\n### Install prebuilt binaries via powershell script\n\n```sh\npowershell -c \"irm https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.9.0/axolotlsay-js-installer.ps1 | iex\"\n```\n\n### Install prebuilt binaries via Homebrew\n\n```sh\nbrew install axodotdev/packages/axolotlsay-js\n```\n\n## Download axolotlsay-js 0.9.0\n\n|  File  | Platform | Checksum |\n|--------|----------|----------|\n| [axolotlsay-js-x86_64-apple-darwin.tar.xz](https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.9.0/axolotlsay-js-x86_64-apple-darwin.tar.xz) | Intel macOS | [checksum](https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.9.0/axolotlsay-js-x86_64-apple-darwin.tar.xz.sha256) |\n| [axolotlsay-js-x86_64-pc-windows-msvc.zip](https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.9.0/axolotlsay-js-x86_64-pc-windows-msvc.zip) | x64 Windows | [checksum](https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.9.0/axolotlsay-js-x86_64-pc-windows-msvc.zip.sha256) |\n| [axolotlsay-js-x86_64-unknown-linux-gnu.tar.xz](https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.9.0/axolotlsay-js-x86_64-unknown-linux-gnu.tar.xz) | x64 Linux | [checksum](https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.9.0/axolotlsay-js-x86_64-unknown-linux-gnu.tar.xz.sha256) |\n\n# axolotlsay 0.9.0\n\n## Install axolotlsay 0.9.0\n\n### Install prebuilt binaries via shell script\n\n```sh\ncurl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.9.0/axolotlsay-installer.sh | sh\n```\n\n### Install prebuilt binaries via powershell script\n\n```sh\npowershell -c \"irm https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.9.0/axolotlsay-installer.ps1 | iex\"\n```\n\n### Install prebuilt binaries via Homebrew\n\n```sh\nbrew install axodotdev/packages/axolotlsay\n```\n\n## Download axolotlsay 0.9.0\n\n|  File  | Platform | Checksum |\n|--------|----------|----------|\n| [axolotlsay-x86_64-apple-darwin.tar.xz](https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.9.0/axolotlsay-x86_64-apple-darwin.tar.xz) | Intel macOS | [checksum](https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.9.0/axolotlsay-x86_64-apple-darwin.tar.xz.sha256) |\n| [axolotlsay-x86_64-pc-windows-msvc.zip](https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.9.0/axolotlsay-x86_64-pc-windows-msvc.zip) | x64 Windows | [checksum](https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.9.0/axolotlsay-x86_64-pc-windows-msvc.zip.sha256) |\n| [axolotlsay-x86_64-unknown-linux-gnu.tar.xz](https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.9.0/axolotlsay-x86_64-unknown-linux-gnu.tar.xz) | x64 Linux | [checksum](https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.9.0/axolotlsay-x86_64-unknown-linux-gnu.tar.xz.sha256) |\n\n",
   "releases": [
     {
       "app_name": "axolotlsay-js",
-      "app_version": "0.8.0",
+      "app_version": "0.9.0",
       "artifacts": [
         "source.tar.gz",
         "source.tar.gz.sha256",
@@ -2903,7 +2903,7 @@ try {
       ],
       "hosting": {
         "github": {
-          "artifact_download_url": "https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.8.0",
+          "artifact_download_url": "https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.9.0",
           "owner": "axodotdev",
           "repo": "axolotlsay-hybrid"
         }
@@ -2911,7 +2911,7 @@ try {
     },
     {
       "app_name": "axolotlsay",
-      "app_version": "0.8.0",
+      "app_version": "0.9.0",
       "artifacts": [
         "source.tar.gz",
         "source.tar.gz.sha256",
@@ -2927,7 +2927,7 @@ try {
       ],
       "hosting": {
         "github": {
-          "artifact_download_url": "https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.8.0",
+          "artifact_download_url": "https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.9.0",
           "owner": "axodotdev",
           "repo": "axolotlsay-hybrid"
         }
@@ -2942,7 +2942,7 @@ try {
         "aarch64-pc-windows-msvc",
         "x86_64-pc-windows-msvc"
       ],
-      "install_hint": "powershell -c \"irm https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.8.0/axolotlsay-installer.ps1 | iex\"",
+      "install_hint": "powershell -c \"irm https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.9.0/axolotlsay-installer.ps1 | iex\"",
       "description": "Install prebuilt binaries via powershell script"
     },
     "axolotlsay-installer.sh": {
@@ -2954,7 +2954,7 @@ try {
         "x86_64-pc-windows-gnu",
         "x86_64-unknown-linux-gnu"
       ],
-      "install_hint": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.8.0/axolotlsay-installer.sh | sh",
+      "install_hint": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.9.0/axolotlsay-installer.sh | sh",
       "description": "Install prebuilt binaries via shell script"
     },
     "axolotlsay-js-installer.ps1": {
@@ -2964,7 +2964,7 @@ try {
         "aarch64-pc-windows-msvc",
         "x86_64-pc-windows-msvc"
       ],
-      "install_hint": "powershell -c \"irm https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.8.0/axolotlsay-js-installer.ps1 | iex\"",
+      "install_hint": "powershell -c \"irm https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.9.0/axolotlsay-js-installer.ps1 | iex\"",
       "description": "Install prebuilt binaries via powershell script"
     },
     "axolotlsay-js-installer.sh": {
@@ -2976,7 +2976,7 @@ try {
         "x86_64-pc-windows-gnu",
         "x86_64-unknown-linux-gnu"
       ],
-      "install_hint": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.8.0/axolotlsay-js-installer.sh | sh",
+      "install_hint": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.9.0/axolotlsay-js-installer.sh | sh",
       "description": "Install prebuilt binaries via shell script"
     },
     "axolotlsay-js-x86_64-apple-darwin.tar.xz": {
@@ -3297,7 +3297,7 @@ try {
           }
         ]
       },
-      "pr_run_mode": "plan"
+      "pr_run_mode": "upload"
     }
   },
   "linkage": []

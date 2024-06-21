@@ -77,7 +77,7 @@ pub static AXOLOTLSAY_HYBRID: TestContextLock<Tools> = TestContextLock::new(
     &Repo {
         repo_owner: "axodotdev",
         repo_name: "axolotlsay-hybrid",
-        commit_sha: "f6c84529823938679dc7dffb595dc55d2f796cf7",
+        commit_sha: "7571d15a922be0fa7d38875e6c4082533fcb41ae",
         apps: &[
             App {
                 name: "axolotlsay-js",
