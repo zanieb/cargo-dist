@@ -596,9 +596,7 @@ fn test_shared_workspace_root() {
 fn generic_workspace_check<'a>(path: impl Into<&'a Utf8Path>) {
     let workspaces = WorkspaceGraph::find(path.into(), None).unwrap();
     let project = workspaces.root_workspace();
-    let packages = workspaces
-        .direct_packages(workspaces.root_workspace_idx())
-        .collect::<Vec<_>>();
+    let packages = workspaces.all_packages().collect::<Vec<_>>();
     assert_eq!(project.kind, WorkspaceKind::Generic);
     assert_eq!(packages.len(), 2);
     assert!(project.manifest_path.exists());
@@ -680,6 +678,8 @@ fn shared_workspace_check<'a>(path: impl Into<&'a Utf8Path>) {
         .collect::<Vec<_>>();
     assert_eq!(project.kind, WorkspaceKind::Generic);
     assert_eq!(direct_packages.len(), 2);
+    let all_packages = workspaces.all_packages().collect::<Vec<_>>();
+    assert_eq!(all_packages.len(), 11);
     assert!(project.manifest_path.exists());
     check_file(
         project.root_auto_includes.readme.as_deref().unwrap(),
@@ -750,7 +750,15 @@ fn shared_workspace_check<'a>(path: impl Into<&'a Utf8Path>) {
         );
     }
 
-    // TODO: write checks for the cargo parts
+    // Do some basic checks that the cargo packages looks vaguely right
+    for (pkg_idx, package) in &all_packages[2..] {
+        assert!(package.manifest_path.exists());
+        assert!(package.manifest_path != project.manifest_path);
+        let subworkspace = workspaces.workspace(workspaces.workspace_for_package(*pkg_idx));
+        assert_eq!(subworkspace.kind, WorkspaceKind::Rust);
+        assert!(subworkspace.manifest_path.exists());
+        assert!(subworkspace.manifest_path != project.manifest_path);
+    }
 }
 
 #[track_caller]
