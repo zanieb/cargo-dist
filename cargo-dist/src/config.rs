@@ -1555,6 +1555,7 @@ pub(crate) fn parse_metadata_table_or_manifest(
     metadata_table: Option<&serde_json::Value>,
 ) -> DistResult<DistMetadata> {
     match workspace_type {
+        WorkspaceKind::Javascript => unimplemented!("npm packages not yet supported here"),
         // Pre-parsed Rust metadata table
         WorkspaceKind::Rust => parse_metadata_table(manifest_path, metadata_table),
         // Generic dist.toml

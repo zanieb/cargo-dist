@@ -165,9 +165,9 @@ fn test_npm_init_legacy() {
         .best()
         .unwrap();
     assert_eq!(project.kind, WorkspaceKind::Javascript);
-    assert_eq!(project.package_info.len(), 1);
+    assert_eq!(project._package_info.len(), 1);
 
-    let package = &project.package_info[0];
+    let package = &project._package_info[0];
     assert_eq!(package.name, "npm-init-legacy");
 
     // NOTE: we provide a path for this binary that doesn't exist, so if we
@@ -185,9 +185,9 @@ fn test_npm_create_react_app() {
         .best()
         .unwrap();
     assert_eq!(project.kind, WorkspaceKind::Javascript);
-    assert_eq!(project.package_info.len(), 1);
+    assert_eq!(project._package_info.len(), 1);
 
-    let package = &project.package_info[0];
+    let package = &project._package_info[0];
     assert_eq!(package.name, "npm-create-react-app");
 
     // NOTE: we provide paths that exist here, but they're not proper binaries, so if we
@@ -240,9 +240,9 @@ fn test_rooted_npm_good() {
     .best()
     .unwrap();
     assert_eq!(project.kind, WorkspaceKind::Javascript);
-    assert_eq!(project.package_info.len(), 1);
+    assert_eq!(project._package_info.len(), 1);
 
-    let package = &project.package_info[0];
+    let package = &project._package_info[0];
     assert_eq!(package.name, "npm-init-legacy");
 
     // NOTE: we provide a path for this binary that doesn't exist, so if we
@@ -677,9 +677,9 @@ fn shared_workspace_check<'a>(path: impl Into<&'a Utf8Path>) {
         .direct_packages(workspaces.root_workspace_idx())
         .collect::<Vec<_>>();
     assert_eq!(project.kind, WorkspaceKind::Generic);
-    assert_eq!(direct_packages.len(), 2);
+    assert_eq!(direct_packages.len(), 3);
     let all_packages = workspaces.all_packages().collect::<Vec<_>>();
-    assert_eq!(all_packages.len(), 11);
+    assert_eq!(all_packages.len(), 12);
     assert!(project.manifest_path.exists());
     check_file(
         project.root_auto_includes.readme.as_deref().unwrap(),
@@ -750,8 +750,31 @@ fn shared_workspace_check<'a>(path: impl Into<&'a Utf8Path>) {
         );
     }
 
+    {
+        let package = &direct_packages[2].1;
+        assert_eq!(package.name, "npm-init-legacy");
+        assert_eq!(package.binaries.len(), 1);
+        let binary = &package.binaries[0];
+        assert_eq!(binary, "npm-init-legacy");
+        assert_eq!(package.description.as_deref().unwrap(), "a legacy project");
+        assert_eq!(package.homepage_url.as_deref().unwrap(), "https://axo.dev/");
+        assert!(package.manifest_path.exists());
+        assert!(package.manifest_path != project.manifest_path);
+        // Inner package inherits root auto_includes
+        check_file(package.readme_file.as_deref().unwrap(), "root fake readme!");
+        check_file(&package.license_files[0], "root fake license!");
+        check_file(
+            package.changelog_file.as_deref().unwrap(),
+            "root fake changelog!",
+        );
+        assert!(workspaces
+            .repository_url(Some(&[PackageIdx(2)]))
+            .unwrap()
+            .is_none());
+    }
+
     // Do some basic checks that the cargo packages looks vaguely right
-    for (pkg_idx, package) in &all_packages[2..] {
+    for (pkg_idx, package) in &all_packages[3..] {
         assert!(package.manifest_path.exists());
         assert!(package.manifest_path != project.manifest_path);
         let subworkspace = workspaces.workspace(workspaces.workspace_for_package(*pkg_idx));

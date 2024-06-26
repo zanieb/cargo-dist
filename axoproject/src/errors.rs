@@ -27,6 +27,11 @@ pub enum AxoprojectError {
     #[error(transparent)]
     ParseChangelog(#[from] parse_changelog::Error),
 
+    /// An error parsing a generic manifest
+    #[error(transparent)]
+    #[diagnostic(transparent)]
+    Generic(#[from] GenericManifestParseError),
+
     /// An error parsing a Cargo.toml
     #[cfg(feature = "cargo-projects")]
     #[error("couldn't read Cargo.toml")]
@@ -141,5 +146,31 @@ pub enum ProjectError {
         /// The cause
         #[source]
         cause: AxoprojectError,
+    },
+}
+
+/// Errors parsing a generic dist.toml or dist-workspaces.toml
+#[derive(Debug, Error, Diagnostic)]
+pub enum GenericManifestParseError {
+    /// No prefix in member
+    #[error(
+        r#"dist workspace member {val} is missing prefix
+members should be formatted like "dist:some/path
+possible prefixes are: dist, cargo, npm"#
+    )]
+    NoPrefix {
+        /// Raw entry in the list of members
+        val: String,
+    },
+    /// Unknown prefix in member
+    #[error(
+        "dist workspace member {val} has unknown {prefix} prefix
+possible prefixes are: dist, cargo, npm"
+    )]
+    UnknownPrefix {
+        /// prefix parsed out
+        prefix: String,
+        /// Raw entry in the list of members
+        val: String,
     },
 }

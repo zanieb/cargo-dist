@@ -197,7 +197,7 @@ fn check_dist_package(
             }
         }
         ReleaseType::Version(ver) => {
-            if pkg.version.as_ref().unwrap().semver() != ver {
+            if pkg.version.as_ref().unwrap().semver() != *ver {
                 return Some(format!("didn't match tag {}", announcing.tag));
             }
         }
@@ -429,7 +429,7 @@ fn ensure_tag(
             let versions = possible_tags(graph, releases.iter().map(|(idx, _)| *idx));
             if versions.len() == 1 {
                 // Nice, one version, use it
-                let version = *versions.first_key_value().unwrap().0;
+                let version = versions.first_key_value().as_ref().unwrap().0;
                 let tag = format!("v{version}");
                 info!("inferred Announcement tag: {}", tag);
                 *announcing = parse_tag_for_all_packages(graph, &tag)?;
@@ -590,11 +590,11 @@ fn parse_tag_for_all_packages(
 ///
 /// This is the set of options used by tag inference. Inference succeeds if
 /// there's only one key in the output.
-fn possible_tags<'a>(
-    graph: &'a DistGraphBuilder,
+fn possible_tags(
+    graph: &DistGraphBuilder,
     rust_releases: impl IntoIterator<Item = PackageIdx>,
-) -> SortedMap<&'a Version, Vec<PackageIdx>> {
-    let mut versions = SortedMap::<&Version, Vec<PackageIdx>>::new();
+) -> SortedMap<Version, Vec<PackageIdx>> {
+    let mut versions = SortedMap::<Version, Vec<PackageIdx>>::new();
     for pkg_idx in rust_releases {
         let info = graph.workspaces.package(pkg_idx);
         let version = info.version.as_ref().unwrap().semver();
@@ -606,7 +606,7 @@ fn possible_tags<'a>(
 /// Get a help printout for what --tags could have been passed
 fn tag_help(
     graph: &DistGraphBuilder,
-    versions: SortedMap<&Version, Vec<PackageIdx>>,
+    versions: SortedMap<Version, Vec<PackageIdx>>,
     base_suggestion: &str,
 ) -> String {
     use std::fmt::Write;

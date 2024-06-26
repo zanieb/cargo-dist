@@ -57,12 +57,10 @@ impl WorkspaceGraph {
     ) -> std::result::Result<Self, ProjectError> {
         let mut missing = vec![];
 
-        // Prefer generic workspace, then use rust workspace
-        for ws in [
-            generic::get_workspace(start_dir, clamp_to_dir),
-            rust::get_workspace(start_dir, clamp_to_dir),
-        ] {
-            match ws {
+        // Prefer generic workspace, then use rust workspace.
+        // JS is currently not allowed to be a root workspace, only a child
+        for ws in [generic::get_workspace, rust::get_workspace] {
+            match ws(start_dir, clamp_to_dir) {
                 // Accept the first one we find
                 WorkspaceSearch::Found(ws) => {
                     let mut workspaces = Self::default();
@@ -606,14 +604,17 @@ impl Version {
 
     /// Returns a semver-based Version
     #[cfg(any(feature = "generic-projects", feature = "cargo-projects"))]
-    pub fn semver(&self) -> &semver::Version {
+    pub fn semver(&self) -> semver::Version {
         #[allow(unreachable_patterns)]
         match self {
             #[cfg(feature = "generic-projects")]
-            Version::Generic(v) => v,
+            Version::Generic(v) => v.clone(),
             #[cfg(feature = "cargo-projects")]
-            Version::Cargo(v) => v,
-            _ => panic!("Version wasn't in semver format"),
+            Version::Cargo(v) => v.clone(),
+            Version::Npm(v) => v
+                .to_string()
+                .parse()
+                .expect("version wasn't in semver format"),
         }
     }
 

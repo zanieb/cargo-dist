@@ -1,3 +1,2 @@
 [workspace]
-members = ["generic1", "generic2"]
-cargo-workspaces = ["../cargo-nonvirtual", "../cargo-virtual"]
+members = ["dist:generic1", "dist:generic2", "cargo:../cargo-nonvirtual", "cargo:../cargo-virtual", "npm:../npm-init-legacy"]
