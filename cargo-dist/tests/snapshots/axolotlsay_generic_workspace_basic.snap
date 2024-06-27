@@ -995,7 +995,6 @@ download_binary_and_run_installer "$@" || exit 1
 ================ axolotlsay-js.rb ================
 class AxolotlsayJs < Formula
   desc "JavaScript port of axolotlsay"
-  homepage "https://github.com/axodotdev/axolotlsay-hybrid"
   version "0.9.0"
   if OS.mac?
     url "https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.9.0/axolotlsay-js-x86_64-apple-darwin.tar.xz"
@@ -1005,7 +1004,7 @@ class AxolotlsayJs < Formula
       url "https://github.com/axodotdev/axolotlsay-hybrid/releases/download/v0.9.0/axolotlsay-js-x86_64-unknown-linux-gnu.tar.xz"
     end
   end
-  license "MIT"
+  license "MIT-or-Apache2.0"
 
   BINARY_ALIASES = {"aarch64-apple-darwin": {}, "x86_64-apple-darwin": {}, "x86_64-pc-windows-gnu": {}, "x86_64-unknown-linux-gnu": {}}
 
