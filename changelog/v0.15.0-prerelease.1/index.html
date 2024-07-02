@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en" id="oranda" class="dark axo">
+  <head>
+    <title>cargo-dist</title>
+    
+      <meta property="og:url" content="https://opensource.axo.dev/cargo-dist/" />
+    
+    
+      <link rel="icon" href="/cargo-dist/favicon.ico" />
+    
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+      <meta name="description" content="Shippable application packaging for Rust" />
+      <meta property="og:description" content="Shippable application packaging for Rust" />
+    
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="cargo-dist" />
+    
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta property="og:image" content="https://www.axo.dev/meta_small.jpeg" />
+    
+    
+      <meta property="og:image:alt" content="axo" />
+    
+    
+      <meta name="twitter:creator" content="@axodotdev" />
+      <meta name="twitter:site" content="@axodotdev" />
+    
+    <meta http-equiv="Permissions-Policy" content="interest-cohort=()" />
+    <link rel="stylesheet" href="/cargo-dist/oranda-v0.6.1.css" />
+    
+    
+  </head>
+  <body>
+    <div class="container">
+      <div class="page-body">
+        
+          <div class="repo_banner">
+            <a href="https://github.com/axodotdev/cargo-dist">
+              <div class="github-icon" aria-hidden="true"></div>
+              Check out our GitHub!
+            </a>
+          </div>
+        
+
+        <main>
+          <header>
+            
+            <h1 class="title">cargo-dist</h1>
+            
+  <nav class="nav">
+    <ul>
+      <li><a href="/cargo-dist/">Home</a></li>
+
+      
+
+      
+        <li><a href="/cargo-dist/artifacts/">Install</a></li>
+      
+
+      
+        <li><a href="/cargo-dist/book/">Docs</a></li>
+      
+
+      
+
+      
+        <li><a href="/cargo-dist/changelog/">Changelog</a></li>
+      
+    </ul>
+  </nav>
+
+          </header>
+
+          
+  <div>
+    <h1>Version 0.15.0-prerelease.1</h1>
+    <div class="releases-body">
+      
+      
+      <section class="release pre-release ">
+  
+  <div class="release-info">
+    <span class="flex items-center gap-2">
+      <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'>
+    <path stroke-linecap='round' stroke-linejoin='round' d='M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z' />
+    <path stroke-linecap='round' stroke-linejoin='round' d='M6 6h.008v.008H6V6z' /></svg>
+      v0.15.0-prerelease.1
+    </span>
+    <span class="flex items-center gap-2">
+      
+        <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='currentColor' class='w-6 h-6'><path stroke-linecap='round' stroke-linejoin='round' d='M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5' /></svg>
+        May  8 2024 at 23:32 UTC
+      
+    </span>
+  </div>
+  <div class="release-body">
+    <p>This release contains a ton of new features and some fixes.</p>
+<p>For the supplychain folks, we now support windows codesigning and several new hashing algorithms.</p>
+<p>For projects with complex repositories, we now have several new options for configuring the release process.</p>
+<h2>Windows codesigning</h2>
+<p>cargo-dist can automatically codesign Windows EXEs and MSIs using SSL.com's eSigner cloud signing service.</p>
+<p>Although there are many ways to do code signing, this process is specifically concerned with ensuring Windows SmartScreen recognizes the authenticity of the signatures and doesn't prevent your users from running the application. Otherwise, any user who downloads your application with a web browser will get a popup warning them against running it. (Alternative methods of downloading and installing, such as cargo-dist's powershell installers do not trigger SmartScreen.)</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/signing-and-attestation.html#windows-artifact-signing-with-sslcom-certificates" rel="noopener noreferrer">docs</a></li>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1036" rel="noopener noreferrer">feat: reimplement ssldotcom-windows-sign</a></li>
+</ul>
+<h2>Additional hash algorithms</h2>
+<p>The SHA-3 and BLAKE2 hash algorithms are now supported.</p>
+<p>Thanks to @sorairolake for contributing this!</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#checksum" rel="noopener noreferrer">docs</a></li>
+<li>impl @sorairolake <a href="https://github.com/axodotdev/cargo-dist/pull/1067" rel="noopener noreferrer">feat: support SHA-3 and BLAKE2</a></li>
+</ul>
+<h2>Improvements for installing tools within GitHub Actions</h2>
+<p>Previously, our installers would update the user's <code>PATH</code> for local commandline access but wouldn't set themselves up in the <code>PATH</code> within GitHub Actions. We've added a feature to the shell and Windows installers which detects if they're running within Actions and adds the newly-installed tool to <code>GITHUB_PATH</code> for future tasks within the job.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1047" rel="noopener noreferrer">feat: add paths to GITHUB_PATH if available</a></li>
+</ul>
+<h2>Custom installer output</h2>
+<p>When a shell or powershell installer runs successfully it will print out "everything's installed!", but if you want a different message that better matches your app's look-and-feel, or provides a more useful call-to-action, you can now do that with <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#install-success-msg" rel="noopener noreferrer">the <code>install-success-msg</code> setting</a>.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#install-success-msg" rel="noopener noreferrer">docs</a></li>
+<li>impl @ashleygwilliams <a href="https://github.com/axodotdev/cargo-dist/pull/1102" rel="noopener noreferrer">feat: custom success msg</a></li>
+</ul>
+<h2>Forcing prereleases to be the latest</h2>
+<p>cargo-dist has traditionally parsed the version number of new releases and used this to determine if the new release is a prerelease or a stable release. We apply some special handling to prereleases, such as marking them as prereleases within GitHub Releases. In 0.15.0, we've added the new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#force-latest" rel="noopener noreferrer"><code>force-latest</code></a> configuration flag which makes it possible to instruct cargo-dist to treat every release as the latest release regardless of its version number.</p>
+<p>This mostly exists to support projects who only plan to produce prereleases for the forseeable future, so that GitHub properly shows them in its UI.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#force-latest" rel="noopener noreferrer">docs</a></li>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1054" rel="noopener noreferrer">feat: allow always marking releases as stable</a></li>
+</ul>
+<h2>Configuring the global runner</h2>
+<p>In 0.6.0, we added support for configuring custom runners for native builds in GitHub Actions. However, until now, all other jobs still ran using our default runner. We've added a setting to the existing custom runner syntax that lets you specify what runner to use for all other jobs by using <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-custom-runners" rel="noopener noreferrer">the "global" key</a>.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-custom-runners" rel="noopener noreferrer">docs</a></li>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1055" rel="noopener noreferrer">feat: allow configuring global runner</a></li>
+</ul>
+<h2>Specify commit to publish to in external repo</h2>
+<p>In 0.14.0, we added the new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-repo" rel="noopener noreferrer"><code>github-releases-repo</code></a> configuration which allows publishing releases to an external repository rather than the one in which the CI job is running. The new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-submodule-path" rel="noopener noreferrer"><code>github-releases-submodule-path</code></a> configuration option enhances that with an additional feature: it allows specifying a submodule within the current repository to use to determine which commit to tag the new release as.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-submodule-path" rel="noopener noreferrer">docs</a></li>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1026" rel="noopener noreferrer">feat: allow specifying external commit from submodule</a></li>
+</ul>
+<h2>Fixes</h2>
+<ul>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1052" rel="noopener noreferrer">fix: improve reliability for fetching standalone updaters</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1037" rel="noopener noreferrer">fix: write correct install prefix to receipt</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1031" rel="noopener noreferrer">fix: bin_aliases should come from packages</a></li>
+<li>@Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1050" rel="noopener noreferrer">fix: repair and cleanup npm binary caching</a></li>
+<li>@sorairolake <a href="https://github.com/axodotdev/cargo-dist/pull/1066" rel="noopener noreferrer">fix: zstd file extension</a></li>
+</ul>
+
+  </div>
+</section>
+    </div>
+  </div>
+
+        </main>
+      </div>
+
+      <footer>
+        
+          <a href="https://github.com/axodotdev/cargo-dist"><div class="github-icon" aria-hidden="true"></div></a>
+        
+        <span>
+          cargo-dist, MIT OR Apache-2.0
+        </span>
+      </footer>
+    </div>
+
+    
+      <script defer="true" data-domain="opensource.axo.dev" src="https://plausible.io/js/script.js"></script>
+    
+    
+
+    
+  </body>
+</html>

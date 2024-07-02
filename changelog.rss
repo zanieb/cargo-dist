@@ -1,0 +1,1271 @@
+<?xml version="1.0" encoding="utf-8"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>cargo-dist Changelog</title><link>http://127.0.0.1:7979/cargo-dist/changelog</link><description>Changelog information for cargo-dist</description><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><atom:link href="http://127.0.0.1:7979/cargo-dist/changelog.rss" rel="self"/><item><title>Version 0.17.0 (2024-06-27)</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.17.0</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.17.0</guid><content:encoded><![CDATA[<p>This release is mostly several fixes to how we create GitHub Releases, as well as some internal improvements for future feature work.</p>
+<h2>GitHub Release Ordering</h2>
+<p>We now prefer creating your <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-release" rel="noopener noreferrer">GitHub Release in the host step</a>, ensuring published npm and Homebrew packages never refer to URLs that don't yet exist.</p>
+<p>Conceptually the cargo-dist pipeline is as follow:</p>
+<ol>
+<li>plan the release</li>
+<li>build the artifacts</li>
+<li>host the artifacts</li>
+<li>publish the packages (these can fetch the hosted artifacts!)</li>
+<li>announce the release (this says to install the published packages!)</li>
+</ol>
+<p>GitHub Releases has always been a bit problematic as a hosting provider because it's both where we want to host our files, and creating it is also in some sense announcing the release. Ideally you would be able to draft the GitHub Release to host your files, publish everything that references those files, and then undraft it at the end to announce and tag the release. However the URLs of artifacts in a draft release are temporary, and go away when you undraft it, so this doesn't work.</p>
+<p>When we first created cargo-dist, we didn't support publishing packages, so we put GitHub Release at the end, since it was basically the only "side-effect" of running cargo-dist, and you want those at the end. Once we added publishing of things to npm and homebrew, the dual nature of GitHub releases became way more apparent.</p>
+<p>In fact, because the GitHub Release contains instructions to install from npm/homebrew, there was essentially a circular dependency between them, with no way to publish all of them in a non-racey way. At the time we opted for preserving existing behaviour of GitHub Last, resulting in a roughly 30 second period where npm/homebrew packages would be published but would error out on install because the artifacts aren't yet uploaded.</p>
+<p>We were of course frustrated with this and <a href="https://blog.axo.dev/2024/01/axo-releases-urls" rel="noopener noreferrer">had a lot of words to say about URLs, resulting in us making axo Releases, which solved the problem properly</a>.</p>
+<p>But pure GitHub users aren't going away, and this conflict still exists for them. Since then it's become increasingly clear that we made the wrong call here, and in fact the npm/homebrew package integrity is <em>way</em> more important than someone maybe getting an email about a GitHub Release referencing packages that don't yet exist. As such we've reversed the original decision and moved GitHub Releases to the host step.</p>
+<p>When using axo Releases together with GitHub Releases, GitHub remains in the announce step where it belongs, because it's more of a mirror/announcement, and not the canonical file host.</p>
+<p>If for whatever reason you need to get the old behaviour back, you can use the new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-release" rel="noopener noreferrer"><code>github-release = "announce"</code> config</a>.</p>
+<p>The only reason you might want to override this setting is if you're using <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#dispatch-releases" rel="noopener noreferrer"><code>dispatch-releases = true</code></a> and you really want your git tag to be the last operation in your release process (because creating a GitHub Release necessarily creates the git tag if it doesn't yet exist, and many organizations really don't like when you delete/change git tags). In this case setting <code>github-release = "announce"</code> will accomplish that, but the above race conditions would then apply.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-release" rel="noopener noreferrer">docs</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1171" rel="noopener noreferrer">fix: prefer creating github releases in host step</a></li>
+</ul>
+<h2>GitHub Release Reliability</h2>
+<p>GitHub Releases should once again be created transactionally, preventing a release from being created without its artifacts being uploaded, if uploading the artifacts fails for any reason. This fixes a regression from the previous release.</p>
+<p>When using the <code>dispatch-releases = true</code> setting, we now more strictly specify the commit that should be tagged, preventing any race conditions from changing it. This race potentially always existed, but only seemed to be observable if you retried a failed release.</p>
+<ul>
+<li>@gankra + @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1164" rel="noopener noreferrer">fix: make github releases more robust</a></li>
+</ul>
+<h2>Other Fixes</h2>
+<ul>
+<li>@gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1116" rel="noopener noreferrer">feat: experimental generic workspaces</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1135" rel="noopener noreferrer">chore: move axoproject in tree</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1158" rel="noopener noreferrer">fix: clamp workspace search to current repo</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1157" rel="noopener noreferrer">fix: pass correct path to generic builds</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1150" rel="noopener noreferrer">fix: add generic workspace tests</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1139" rel="noopener noreferrer">fix: pipe working directory to more commands</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1165" rel="noopener noreferrer">feat: cache cargo-dist binary in global tasks</a></li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.17.0-prerelease.2</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.17.0-prerelease.2</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.17.0-prerelease.2</guid><content:encoded><![CDATA[<p>This release is mostly several fixes to how we create GitHub Releases, as well as some internal improvements for future feature work.</p>
+<h2>GitHub Release Ordering</h2>
+<p>We now prefer creating your <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-release" rel="noopener noreferrer">GitHub Release in the host step</a>, ensuring published npm and Homebrew packages never refer to URLs that don't yet exist.</p>
+<p>Conceptually the cargo-dist pipeline is as follow:</p>
+<ol>
+<li>plan the release</li>
+<li>build the artifacts</li>
+<li>host the artifacts</li>
+<li>publish the packages (these can fetch the hosted artifacts!)</li>
+<li>announce the release (this says to install the published packages!)</li>
+</ol>
+<p>GitHub Releases has always been a bit problematic as a hosting provider because it's both where we want to host our files, and creating it is also in some sense announcing the release. Ideally you would be able to draft the GitHub Release to host your files, publish everything that references those files, and then undraft it at the end to announce and tag the release. However the URLs of artifacts in a draft release are temporary, and go away when you undraft it, so this doesn't work.</p>
+<p>When we first created cargo-dist, we didn't support publishing packages, so we put GitHub Release at the end, since it was basically the only "side-effect" of running cargo-dist, and you want those at the end. Once we added publishing of things to npm and homebrew, the dual nature of GitHub releases became way more apparent.</p>
+<p>In fact, because the GitHub Release contains instructions to install from npm/homebrew, there was essentially a circular dependency between them, with no way to publish all of them in a non-racey way. At the time we opted for preserving existing behaviour of GitHub Last, resulting in a roughly 30 second period where npm/homebrew packages would be published but would error out on install because the artifacts aren't yet uploaded.</p>
+<p>We were of course frustrated with this and <a href="https://blog.axo.dev/2024/01/axo-releases-urls" rel="noopener noreferrer">had a lot of words to say about URLs, resulting in us making axo Releases, which solved the problem properly</a>.</p>
+<p>But pure GitHub users aren't going away, and this conflict still exists for them. Since then it's become increasingly clear that we made the wrong call here, and in fact the npm/homebrew package integrity is <em>way</em> more important than someone maybe getting an email about a GitHub Release referencing packages that don't yet exist. As such we've reversed the original decision and moved GitHub Releases to the host step.</p>
+<p>When using axo Releases together with GitHub Releases, GitHub remains in the announce step where it belongs, because it's more of a mirror/announcement, and not the canonical file host.</p>
+<p>If for whatever reason you need to get the old behaviour back, you can use the new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-release" rel="noopener noreferrer"><code>github-release = "announce"</code> config</a>.</p>
+<p>The only reason you might want to override this setting is if you're using <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#dispatch-releases" rel="noopener noreferrer"><code>dispatch-releases = true</code></a> and you really want your git tag to be the last operation in your release process (because creating a GitHub Release necessarily creates the git tag if it doesn't yet exist, and many organizations really don't like when you delete/change git tags). In this case setting <code>github-release = "announce"</code> will accomplish that, but the above race conditions would then apply.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-release" rel="noopener noreferrer">docs</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1171" rel="noopener noreferrer">fix: prefer creating github releases in host step</a></li>
+</ul>
+<h2>GitHub Release Reliability</h2>
+<p>GitHub Releases should once again be created transactionally, preventing a release from being created without its artifacts being uploaded, if uploading the artifacts fails for any reason. This fixes a regression from the previous release.</p>
+<p>When using the <code>dispatch-releases = true</code> setting, we now more strictly specify the commit that should be tagged, preventing any race conditions from changing it. This race potentially always existed, but only seemed to be observable if you retried a failed release.</p>
+<ul>
+<li>@gankra + @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1164" rel="noopener noreferrer">fix: make github releases more robust</a></li>
+</ul>
+<h2>Other Fixes</h2>
+<ul>
+<li>@gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1116" rel="noopener noreferrer">feat: experimental generic workspaces</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1135" rel="noopener noreferrer">chore: move axoproject in tree</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1158" rel="noopener noreferrer">fix: clamp workspace search to current repo</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1157" rel="noopener noreferrer">fix: pass correct path to generic builds</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1150" rel="noopener noreferrer">fix: add generic workspace tests</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1139" rel="noopener noreferrer">fix: pipe working directory to more commands</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1165" rel="noopener noreferrer">feat: cache cargo-dist binary in global tasks</a></li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.17.0-prerelease.1</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.17.0-prerelease.1</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.17.0-prerelease.1</guid><content:encoded><![CDATA[<p>This release is mostly several fixes to how we create GitHub Releases, as well as some internal improvements for future feature work.</p>
+<h2>GitHub Release Ordering</h2>
+<p>We now prefer creating your <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-release" rel="noopener noreferrer">GitHub Release in the host step</a>, ensuring published npm and Homebrew packages never refer to URLs that don't yet exist.</p>
+<p>Conceptually the cargo-dist pipeline is as follow:</p>
+<ol>
+<li>plan the release</li>
+<li>build the artifacts</li>
+<li>host the artifacts</li>
+<li>publish the packages (these can fetch the hosted artifacts!)</li>
+<li>announce the release (this says to install the published packages!)</li>
+</ol>
+<p>GitHub Releases has always been a bit problematic as a hosting provider because it's both where we want to host our files, and creating it is also in some sense announcing the release. Ideally you would be able to draft the GitHub Release to host your files, publish everything that references those files, and then undraft it at the end to announce and tag the release. However the URLs of artifacts in a draft release are temporary, and go away when you undraft it, so this doesn't work.</p>
+<p>When we first created cargo-dist, we didn't support publishing packages, so we put GitHub Release at the end, since it was basically the only "side-effect" of running cargo-dist, and you want those at the end. Once we added publishing of things to npm and homebrew, the dual nature of GitHub releases became way more apparent.</p>
+<p>In fact, because the GitHub Release contains instructions to install from npm/homebrew, there was essentially a circular dependency between them, with no way to publish all of them in a non-racey way. At the time we opted for preserving existing behaviour of GitHub Last, resulting in a roughly 30 second period where npm/homebrew packages would be published but would error out on install because the artifacts aren't yet uploaded.</p>
+<p>We were of course frustrated with this and <a href="https://blog.axo.dev/2024/01/axo-releases-urls" rel="noopener noreferrer">had a lot of words to say about URLs, resulting in us making axo Releases, which solved the problem properly</a>.</p>
+<p>But pure GitHub users aren't going away, and this conflict still exists for them. Since then it's become increasingly clear that we made the wrong call here, and in fact the npm/homebrew package integrity is <em>way</em> more important than someone maybe getting an email about a GitHub Release referencing packages that don't yet exist. As such we've reversed the original decision and moved GitHub Releases to the host step.</p>
+<p>When using axo Releases together with GitHub Releases, GitHub remains in the announce step where it belongs, because it's more of a mirror/announcement, and not the canonical file host.</p>
+<p>If for whatever reason you need to get the old behaviour back, you can use the new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-release" rel="noopener noreferrer"><code>github-release = "announce"</code> config</a>.</p>
+<p>The only reason you might want to override this setting is if you're using <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#dispatch-releases" rel="noopener noreferrer"><code>dispatch-releases = true</code></a> and you really want your git tag to be the last operation in your release process (because creating a GitHub Release necessarily creates the git tag if it doesn't yet exist, and many organizations really don't like when you delete/change git tags). In this case setting <code>github-release = "announce"</code> will accomplish that, but the above race conditions would then apply.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-release" rel="noopener noreferrer">docs</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1171" rel="noopener noreferrer">fix: prefer creating github releases in host step</a></li>
+</ul>
+<h2>GitHub Release Reliability</h2>
+<p>GitHub Releases should once again be created transactionally, preventing a release from being created without its artifacts being uploaded, if uploading the artifacts fails for any reason. This fixes a regression from the previous release.</p>
+<p>When using the <code>dispatch-releases = true</code> setting, we now more strictly specify the commit that should be tagged, preventing any race conditions from changing it. This race potentially always existed, but only seemed to be observable if you retried a failed release.</p>
+<ul>
+<li>@gankra + @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1164" rel="noopener noreferrer">fix: make github releases more robust</a></li>
+</ul>
+<h2>Other Fixes</h2>
+<ul>
+<li>@gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1116" rel="noopener noreferrer">feat: experimental generic workspaces</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1135" rel="noopener noreferrer">chore: move axoproject in tree</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1158" rel="noopener noreferrer">fix: clamp workspace search to current repo</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1157" rel="noopener noreferrer">fix: pass correct path to generic builds</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1150" rel="noopener noreferrer">fix: add generic workspace tests</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1139" rel="noopener noreferrer">fix: pipe working directory to more commands</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1165" rel="noopener noreferrer">feat: cache cargo-dist binary in global tasks</a></li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.16.0 (2024-06-14)</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.16.0</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.16.0</guid><content:encoded><![CDATA[<p>This release introduces some new <a href="https://opensource.axo.dev/cargo-dist/book/supplychain-security/index.html" rel="noopener noreferrer">supplychain security features</a>, and fixes some bugs.</p>
+<h2>GitHub Artifact Attestations</h2>
+<p>With the new <a href="https://opensource.axo.dev/cargo-dist/book/supplychain-security/attestations/github.html" rel="noopener noreferrer"><code>github-attestations = true</code> setting</a> you can opt into GitHub's experimental artifact attestation system. In the future this may become enabled by default.</p>
+<ul>
+<li>@dunxen <a href="https://github.com/axodotdev/cargo-dist/pull/1012" rel="noopener noreferrer">feat: add support for github artifact attestations</a></li>
+</ul>
+<h2>Reducing Third-Party Actions</h2>
+<p>We're working towards replacing some third-party GitHub actions used by cargo-dist with builtin implementations, reducing the surface area for audits. We've begun with replacing <a href="https://github.com/ncipollo/release-action" rel="noopener noreferrer">ncipollo/release-action</a> with usage of the preinstalled GitHub CLI. To be clear: we have no reason to distrust the contents of action, and it's officially recommended by GitHub. It was just simple to replace with a more first-party solution.</p>
+<p>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1089" rel="noopener noreferrer">feat: use the raw github cli instead of an action for releases</a></p>
+<h2>Autodetect Buildjet Runners For Rust Cache</h2>
+<p>We use <a href="https://github.com/Swatinem/rust-cache" rel="noopener noreferrer">swatinem/rust-cache</a> to try to speed up the release process. As it turns out, they have special support for buildjet's caching backend, which is faster and presumably more secure to use when running actions on buildjet's infra. Our users often <a href="https://opensource.axo.dev/cargo-dist/book/ci/customizing.html#custom-runners" rel="noopener noreferrer">enable buildjet for arm linux builds</a>, so hopefully those should be faster now!</p>
+<p>@gankra + @arlyon <a href="https://github.com/axodotdev/cargo-dist/pull/1129" rel="noopener noreferrer">feat: autodetect buildjet runners to use their backend for rust cache</a></p>
+<h2>Path Flexibility For Extra Artifacts</h2>
+<p>Previously <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#extra-artifacts" rel="noopener noreferrer">the extra-artifacts setting</a> didn't support the outputs being produced anywhere but the root of the repository. Now the input can be a relative path, making the feature easier to use.</p>
+<p>@gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1128" rel="noopener noreferrer">fix: rework extra_artifacts to properly use paths</a></p>
+]]></content:encoded></item><item><title>Version 0.16.0-prerelease.6</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.16.0-prerelease.6</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.16.0-prerelease.6</guid><content:encoded><![CDATA[<p>This release introduces some new <a href="https://opensource.axo.dev/cargo-dist/book/supplychain-security/index.html" rel="noopener noreferrer">supplychain security features</a>, and fixes some bugs.</p>
+<h2>GitHub Artifact Attestations</h2>
+<p>With the new <a href="https://opensource.axo.dev/cargo-dist/book/supplychain-security/attestations/github.html" rel="noopener noreferrer"><code>github-attestations = true</code> setting</a> you can opt into GitHub's experimental artifact attestation system. In the future this may become enabled by default.</p>
+<ul>
+<li>@dunxen <a href="https://github.com/axodotdev/cargo-dist/pull/1012" rel="noopener noreferrer">feat: add support for github artifact attestations</a></li>
+</ul>
+<h2>Reducing Third-Party Actions</h2>
+<p>We're working towards replacing some third-party GitHub actions used by cargo-dist with builtin implementations, reducing the surface area for audits. We've begun with replacing <a href="https://github.com/ncipollo/release-action" rel="noopener noreferrer">ncipollo/release-action</a> with usage of the preinstalled GitHub CLI. To be clear: we have no reason to distrust the contents of action, and it's officially recommended by GitHub. It was just simple to replace with a more first-party solution.</p>
+<p>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1089" rel="noopener noreferrer">feat: use the raw github cli instead of an action for releases</a></p>
+<h2>Autodetect Buildjet Runners For Rust Cache</h2>
+<p>We use <a href="https://github.com/Swatinem/rust-cache" rel="noopener noreferrer">swatinem/rust-cache</a> to try to speed up the release process. As it turns out, they have special support for buildjet's caching backend, which is faster and presumably more secure to use when running actions on buildjet's infra. Our users often <a href="https://opensource.axo.dev/cargo-dist/book/ci/customizing.html#custom-runners" rel="noopener noreferrer">enable buildjet for arm linux builds</a>, so hopefully those should be faster now!</p>
+<p>@gankra + @arlyon <a href="https://github.com/axodotdev/cargo-dist/pull/1129" rel="noopener noreferrer">feat: autodetect buildjet runners to use their backend for rust cache</a></p>
+<h2>Path Flexibility For Extra Artifacts</h2>
+<p>Previously <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#extra-artifacts" rel="noopener noreferrer">the extra-artifacts setting</a> didn't support the outputs being produced anywhere but the root of the repository. Now the input can be a relative path, making the feature easier to use.</p>
+<p>@gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1128" rel="noopener noreferrer">fix: rework extra_artifacts to properly use paths</a></p>
+]]></content:encoded></item><item><title>Version 0.16.0-prerelease.5</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.16.0-prerelease.5</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.16.0-prerelease.5</guid><content:encoded><![CDATA[<p>This release introduces some new <a href="https://opensource.axo.dev/cargo-dist/book/supplychain-security/index.html" rel="noopener noreferrer">supplychain security features</a>, and fixes some bugs.</p>
+<h2>GitHub Artifact Attestations</h2>
+<p>With the new <a href="https://opensource.axo.dev/cargo-dist/book/supplychain-security/attestations/github.html" rel="noopener noreferrer"><code>github-attestations = true</code> setting</a> you can opt into GitHub's experimental artifact attestation system. In the future this may become enabled by default.</p>
+<ul>
+<li>@dunxen <a href="https://github.com/axodotdev/cargo-dist/pull/1012" rel="noopener noreferrer">feat: add support for github artifact attestations</a></li>
+</ul>
+<h2>Reducing Third-Party Actions</h2>
+<p>We're working towards replacing some third-party GitHub actions used by cargo-dist with builtin implementations, reducing the surface area for audits. We've begun with replacing <a href="https://github.com/ncipollo/release-action" rel="noopener noreferrer">ncipollo/release-action</a> with usage of the preinstalled GitHub CLI. To be clear: we have no reason to distrust the contents of action, and it's officially recommended by GitHub. It was just simple to replace with a more first-party solution.</p>
+<p>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1089" rel="noopener noreferrer">feat: use the raw github cli instead of an action for releases</a></p>
+<h2>Autodetect Buildjet Runners For Rust Cache</h2>
+<p>We use <a href="https://github.com/Swatinem/rust-cache" rel="noopener noreferrer">swatinem/rust-cache</a> to try to speed up the release process. As it turns out, they have special support for buildjet's caching backend, which is faster and presumably more secure to use when running actions on buildjet's infra. Our users often <a href="https://opensource.axo.dev/cargo-dist/book/ci/customizing.html#custom-runners" rel="noopener noreferrer">enable buildjet for arm linux builds</a>, so hopefully those should be faster now!</p>
+<p>@gankra + @arlyon <a href="https://github.com/axodotdev/cargo-dist/pull/1129" rel="noopener noreferrer">feat: autodetect buildjet runners to use their backend for rust cache</a></p>
+<h2>Path Flexibility For Extra Artifacts</h2>
+<p>Previously <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#extra-artifacts" rel="noopener noreferrer">the extra-artifacts setting</a> didn't support the outputs being produced anywhere but the root of the repository. Now the input can be a relative path, making the feature easier to use.</p>
+<p>@gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1128" rel="noopener noreferrer">fix: rework extra_artifacts to properly use paths</a></p>
+]]></content:encoded></item><item><title>Version 0.16.0-prerelease.4</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.16.0-prerelease.4</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.16.0-prerelease.4</guid><content:encoded><![CDATA[<p>This release introduces some new <a href="https://opensource.axo.dev/cargo-dist/book/supplychain-security/index.html" rel="noopener noreferrer">supplychain security features</a>, and fixes some bugs.</p>
+<h2>GitHub Artifact Attestations</h2>
+<p>With the new <a href="https://opensource.axo.dev/cargo-dist/book/supplychain-security/attestations/github.html" rel="noopener noreferrer"><code>github-attestations = true</code> setting</a> you can opt into GitHub's experimental artifact attestation system. In the future this may become enabled by default.</p>
+<ul>
+<li>@dunxen <a href="https://github.com/axodotdev/cargo-dist/pull/1012" rel="noopener noreferrer">feat: add support for github artifact attestations</a></li>
+</ul>
+<h2>Reducing Third-Party Actions</h2>
+<p>We're working towards replacing some third-party GitHub actions used by cargo-dist with builtin implementations, reducing the surface area for audits. We've begun with replacing <a href="https://github.com/ncipollo/release-action" rel="noopener noreferrer">ncipollo/release-action</a> with usage of the preinstalled GitHub CLI. To be clear: we have no reason to distrust the contents of action, and it's officially recommended by GitHub. It was just simple to replace with a more first-party solution.</p>
+<p>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1089" rel="noopener noreferrer">feat: use the raw github cli instead of an action for releases</a></p>
+<h2>Autodetect Buildjet Runners For Rust Cache</h2>
+<p>We use <a href="https://github.com/Swatinem/rust-cache" rel="noopener noreferrer">swatinem/rust-cache</a> to try to speed up the release process. As it turns out, they have special support for buildjet's caching backend, which is faster and presumably more secure to use when running actions on buildjet's infra. Our users often <a href="https://opensource.axo.dev/cargo-dist/book/ci/customizing.html#custom-runners" rel="noopener noreferrer">enable buildjet for arm linux builds</a>, so hopefully those should be faster now!</p>
+<p>@gankra + @arlyon <a href="https://github.com/axodotdev/cargo-dist/pull/1129" rel="noopener noreferrer">feat: autodetect buildjet runners to use their backend for rust cache</a></p>
+<h2>Path Flexibility For Extra Artifacts</h2>
+<p>Previously <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#extra-artifacts" rel="noopener noreferrer">the extra-artifacts setting</a> didn't support the outputs being produced anywhere but the root of the repository. Now the input can be a relative path, making the feature easier to use.</p>
+<p>@gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1128" rel="noopener noreferrer">fix: rework extra_artifacts to properly use paths</a></p>
+]]></content:encoded></item><item><title>Version 0.16.0-prerelease.3</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.16.0-prerelease.3</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.16.0-prerelease.3</guid><content:encoded><![CDATA[<p>This release introduces some new <a href="https://opensource.axo.dev/cargo-dist/book/supplychain-security/index.html" rel="noopener noreferrer">supplychain security features</a>, and fixes some bugs.</p>
+<h2>GitHub Artifact Attestations</h2>
+<p>With the new <a href="https://opensource.axo.dev/cargo-dist/book/supplychain-security/attestations/github.html" rel="noopener noreferrer"><code>github-attestations = true</code> setting</a> you can opt into GitHub's experimental artifact attestation system. In the future this may become enabled by default.</p>
+<ul>
+<li>@dunxen <a href="https://github.com/axodotdev/cargo-dist/pull/1012" rel="noopener noreferrer">feat: add support for github artifact attestations</a></li>
+</ul>
+<h2>Reducing Third-Party Actions</h2>
+<p>We're working towards replacing some third-party GitHub actions used by cargo-dist with builtin implementations, reducing the surface area for audits. We've begun with replacing <a href="https://github.com/ncipollo/release-action" rel="noopener noreferrer">ncipollo/release-action</a> with usage of the preinstalled GitHub CLI. To be clear: we have no reason to distrust the contents of action, and it's officially recommended by GitHub. It was just simple to replace with a more first-party solution.</p>
+<p>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1089" rel="noopener noreferrer">feat: use the raw github cli instead of an action for releases</a></p>
+<h2>Autodetect Buildjet Runners For Rust Cache</h2>
+<p>We use <a href="https://github.com/Swatinem/rust-cache" rel="noopener noreferrer">swatinem/rust-cache</a> to try to speed up the release process. As it turns out, they have special support for buildjet's caching backend, which is faster and presumably more secure to use when running actions on buildjet's infra. Our users often <a href="https://opensource.axo.dev/cargo-dist/book/ci/customizing.html#custom-runners" rel="noopener noreferrer">enable buildjet for arm linux builds</a>, so hopefully those should be faster now!</p>
+<p>@gankra + @arlyon <a href="https://github.com/axodotdev/cargo-dist/pull/1129" rel="noopener noreferrer">feat: autodetect buildjet runners to use their backend for rust cache</a></p>
+<h2>Path Flexibility For Extra Artifacts</h2>
+<p>Previously <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#extra-artifacts" rel="noopener noreferrer">the extra-artifacts setting</a> didn't support the outputs being produced anywhere but the root of the repository. Now the input can be a relative path, making the feature easier to use.</p>
+<p>@gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1128" rel="noopener noreferrer">fix: rework extra_artifacts to properly use paths</a></p>
+]]></content:encoded></item><item><title>Version 0.16.0-prerelease.2</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.16.0-prerelease.2</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.16.0-prerelease.2</guid><content:encoded><![CDATA[<p>This release introduces some new <a href="https://opensource.axo.dev/cargo-dist/book/supplychain-security/index.html" rel="noopener noreferrer">supplychain security features</a>, and fixes some bugs.</p>
+<h2>GitHub Artifact Attestations</h2>
+<p>With the new <a href="https://opensource.axo.dev/cargo-dist/book/supplychain-security/attestations/github.html" rel="noopener noreferrer"><code>github-attestations = true</code> setting</a> you can opt into GitHub's experimental artifact attestation system. In the future this may become enabled by default.</p>
+<ul>
+<li>@dunxen <a href="https://github.com/axodotdev/cargo-dist/pull/1012" rel="noopener noreferrer">feat: add support for github artifact attestations</a></li>
+</ul>
+<h2>Reducing Third-Party Actions</h2>
+<p>We're working towards replacing some third-party GitHub actions used by cargo-dist with builtin implementations, reducing the surface area for audits. We've begun with replacing <a href="https://github.com/ncipollo/release-action" rel="noopener noreferrer">ncipollo/release-action</a> with usage of the preinstalled GitHub CLI. To be clear: we have no reason to distrust the contents of action, and it's officially recommended by GitHub. It was just simple to replace with a more first-party solution.</p>
+<p>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1089" rel="noopener noreferrer">feat: use the raw github cli instead of an action for releases</a></p>
+<h2>Autodetect Buildjet Runners For Rust Cache</h2>
+<p>We use <a href="https://github.com/Swatinem/rust-cache" rel="noopener noreferrer">swatinem/rust-cache</a> to try to speed up the release process. As it turns out, they have special support for buildjet's caching backend, which is faster and presumably more secure to use when running actions on buildjet's infra. Our users often <a href="https://opensource.axo.dev/cargo-dist/book/ci/customizing.html#custom-runners" rel="noopener noreferrer">enable buildjet for arm linux builds</a>, so hopefully those should be faster now!</p>
+<p>@gankra + @arlyon <a href="https://github.com/axodotdev/cargo-dist/pull/1129" rel="noopener noreferrer">feat: autodetect buildjet runners to use their backend for rust cache</a></p>
+<h2>Path Flexibility For Extra Artifacts</h2>
+<p>Previously <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#extra-artifacts" rel="noopener noreferrer">the extra-artifacts setting</a> didn't support the outputs being produced anywhere but the root of the repository. Now the input can be a relative path, making the feature easier to use.</p>
+<p>@gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1128" rel="noopener noreferrer">fix: rework extra_artifacts to properly use paths</a></p>
+]]></content:encoded></item><item><title>Version 0.16.0-prerelease.1</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.16.0-prerelease.1</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.16.0-prerelease.1</guid><content:encoded><![CDATA[<p>This release introduces some new <a href="https://opensource.axo.dev/cargo-dist/book/supplychain-security/index.html" rel="noopener noreferrer">supplychain security features</a>, and fixes some bugs.</p>
+<h2>GitHub Artifact Attestations</h2>
+<p>With the new <a href="https://opensource.axo.dev/cargo-dist/book/supplychain-security/attestations/github.html" rel="noopener noreferrer"><code>github-attestations = true</code> setting</a> you can opt into GitHub's experimental artifact attestation system. In the future this may become enabled by default.</p>
+<ul>
+<li>@dunxen <a href="https://github.com/axodotdev/cargo-dist/pull/1012" rel="noopener noreferrer">feat: add support for github artifact attestations</a></li>
+</ul>
+<h2>Reducing Third-Party Actions</h2>
+<p>We're working towards replacing some third-party GitHub actions used by cargo-dist with builtin implementations, reducing the surface area for audits. We've begun with replacing <a href="https://github.com/ncipollo/release-action" rel="noopener noreferrer">ncipollo/release-action</a> with usage of the preinstalled GitHub CLI. To be clear: we have no reason to distrust the contents of action, and it's officially recommended by GitHub. It was just simple to replace with a more first-party solution.</p>
+<p>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1089" rel="noopener noreferrer">feat: use the raw github cli instead of an action for releases</a></p>
+<h2>Autodetect Buildjet Runners For Rust Cache</h2>
+<p>We use <a href="https://github.com/Swatinem/rust-cache" rel="noopener noreferrer">swatinem/rust-cache</a> to try to speed up the release process. As it turns out, they have special support for buildjet's caching backend, which is faster and presumably more secure to use when running actions on buildjet's infra. Our users often <a href="https://opensource.axo.dev/cargo-dist/book/ci/customizing.html#custom-runners" rel="noopener noreferrer">enable buildjet for arm linux builds</a>, so hopefully those should be faster now!</p>
+<p>@gankra + @arlyon <a href="https://github.com/axodotdev/cargo-dist/pull/1129" rel="noopener noreferrer">feat: autodetect buildjet runners to use their backend for rust cache</a></p>
+<h2>Path Flexibility For Extra Artifacts</h2>
+<p>Previously <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#extra-artifacts" rel="noopener noreferrer">the extra-artifacts setting</a> didn't support the outputs being produced anywhere but the root of the repository. Now the input can be a relative path, making the feature easier to use.</p>
+<p>@gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1128" rel="noopener noreferrer">fix: rework extra_artifacts to properly use paths</a></p>
+]]></content:encoded></item><item><title>Version 0.15.1 (2024-06-04)</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.15.1</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.15.1</guid><content:encoded><![CDATA[<p>This is a small release to improve the compatibility of the npm installers with other JS package managers.</p>
+<p>In 0.15.0 we introduced a regression for installing via pnpm, resulting in infinite loops that produced a cryptic "argument list too long" error. This only affected pnpm because of the precise timing of when it creates shim scripts for binaries. This has now been fixed, and we've introduced tests to ensure that pnpm is explicitly supported from here on out.</p>
+<p>We now signal to yarn that we mutate node_modules (to fetch and install binaries), avoiding issues with yarn PnP which assumes node_modules is immutable. Tests have been introduced to ensure that yarn is explicitly supported from here on out.</p>
+]]></content:encoded></item><item><title>Version 0.15.0 (2024-05-31)</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.15.0</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.15.0</guid><content:encoded><![CDATA[<p>This release contains a ton of new features and some fixes.</p>
+<p>For the supplychain folks, we now support windows codesigning and several new hashing algorithms.</p>
+<p>For projects with complex repositories, we now have several new options for configuring the release process.</p>
+<h2>Windows codesigning</h2>
+<p>cargo-dist can automatically codesign Windows EXEs and MSIs using SSL.com's eSigner cloud signing service.</p>
+<p>Although there are many ways to do code signing, this process is specifically concerned with ensuring Windows SmartScreen recognizes the authenticity of the signatures and doesn't prevent your users from running the application. Otherwise, any user who downloads your application with a web browser will get a popup warning them against running it. (Alternative methods of downloading and installing, such as cargo-dist's powershell installers do not trigger SmartScreen.)</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/signing-and-attestation.html#windows-artifact-signing-with-sslcom-certificates" rel="noopener noreferrer">docs</a></li>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1036" rel="noopener noreferrer">feat: reimplement ssldotcom-windows-sign</a></li>
+</ul>
+<h2>Additional hash algorithms</h2>
+<p>The SHA-3 and BLAKE2 hash algorithms are now supported.</p>
+<p>Thanks to @sorairolake for contributing this!</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#checksum" rel="noopener noreferrer">docs</a></li>
+<li>impl @sorairolake <a href="https://github.com/axodotdev/cargo-dist/pull/1067" rel="noopener noreferrer">feat: support SHA-3 and BLAKE2</a></li>
+</ul>
+<h2>Improvements for installing tools within GitHub Actions</h2>
+<p>Previously, our installers would update the user's <code>PATH</code> for local commandline access but wouldn't set themselves up in the <code>PATH</code> within GitHub Actions. We've added a feature to the shell and Windows installers which detects if they're running within Actions and adds the newly-installed tool to <code>GITHUB_PATH</code> for future tasks within the job.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1047" rel="noopener noreferrer">feat: add paths to GITHUB_PATH if available</a></li>
+</ul>
+<h2>Custom installer output</h2>
+<p>When a shell or powershell installer runs successfully it will print out "everything's installed!", but if you want a different message that better matches your app's look-and-feel, or provides a more useful call-to-action, you can now do that with <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#install-success-msg" rel="noopener noreferrer">the <code>install-success-msg</code> setting</a>.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#install-success-msg" rel="noopener noreferrer">docs</a></li>
+<li>impl @ashleygwilliams <a href="https://github.com/axodotdev/cargo-dist/pull/1102" rel="noopener noreferrer">feat: custom success msg</a></li>
+</ul>
+<h2>Forcing prereleases to be the latest</h2>
+<p>cargo-dist has traditionally parsed the version number of new releases and used this to determine if the new release is a prerelease or a stable release. We apply some special handling to prereleases, such as marking them as prereleases within GitHub Releases. In 0.15.0, we've added the new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#force-latest" rel="noopener noreferrer"><code>force-latest</code></a> configuration flag which makes it possible to instruct cargo-dist to treat every release as the latest release regardless of its version number.</p>
+<p>This mostly exists to support projects who only plan to produce prereleases for the forseeable future, so that GitHub properly shows them in its UI.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#force-latest" rel="noopener noreferrer">docs</a></li>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1054" rel="noopener noreferrer">feat: allow always marking releases as stable</a></li>
+</ul>
+<h2>Configuring the global runner</h2>
+<p>In 0.6.0, we added support for configuring custom runners for native builds in GitHub Actions. However, until now, all other jobs still ran using our default runner. We've added a setting to the existing custom runner syntax that lets you specify what runner to use for all other jobs by using <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-custom-runners" rel="noopener noreferrer">the "global" key</a>.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-custom-runners" rel="noopener noreferrer">docs</a></li>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1055" rel="noopener noreferrer">feat: allow configuring global runner</a></li>
+</ul>
+<h2>Specify commit to publish to in external repo</h2>
+<p>In 0.14.0, we added the new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-repo" rel="noopener noreferrer"><code>github-releases-repo</code></a> configuration which allows publishing releases to an external repository rather than the one in which the CI job is running. The new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-submodule-path" rel="noopener noreferrer"><code>github-releases-submodule-path</code></a> configuration option enhances that with an additional feature: it allows specifying a submodule within the current repository to use to determine which commit to tag the new release as.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-submodule-path" rel="noopener noreferrer">docs</a></li>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1026" rel="noopener noreferrer">feat: allow specifying external commit from submodule</a></li>
+</ul>
+<h2>Fixes</h2>
+<ul>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1052" rel="noopener noreferrer">fix: improve reliability for fetching standalone updaters</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1037" rel="noopener noreferrer">fix: write correct install prefix to receipt</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1031" rel="noopener noreferrer">fix: bin_aliases should come from packages</a></li>
+<li>@Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1050" rel="noopener noreferrer">fix: repair and cleanup npm binary caching</a></li>
+<li>@sorairolake <a href="https://github.com/axodotdev/cargo-dist/pull/1066" rel="noopener noreferrer">fix: zstd file extension</a></li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.15.0-prerelease.22 (unreleased)</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.15.0-prerelease.22</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.15.0-prerelease.22</guid><content:encoded><![CDATA[<p>This release contains a ton of new features and some fixes.</p>
+<p>For the supplychain folks, we now support windows codesigning and several new hashing algorithms.</p>
+<p>For projects with complex repositories, we now have several new options for configuring the release process.</p>
+<h2>Windows codesigning</h2>
+<p>cargo-dist can automatically codesign Windows EXEs and MSIs using SSL.com's eSigner cloud signing service.</p>
+<p>Although there are many ways to do code signing, this process is specifically concerned with ensuring Windows SmartScreen recognizes the authenticity of the signatures and doesn't prevent your users from running the application. Otherwise, any user who downloads your application with a web browser will get a popup warning them against running it. (Alternative methods of downloading and installing, such as cargo-dist's powershell installers do not trigger SmartScreen.)</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/signing-and-attestation.html#windows-artifact-signing-with-sslcom-certificates" rel="noopener noreferrer">docs</a></li>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1036" rel="noopener noreferrer">feat: reimplement ssldotcom-windows-sign</a></li>
+</ul>
+<h2>Additional hash algorithms</h2>
+<p>The SHA-3 and BLAKE2 hash algorithms are now supported.</p>
+<p>Thanks to @sorairolake for contributing this!</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#checksum" rel="noopener noreferrer">docs</a></li>
+<li>impl @sorairolake <a href="https://github.com/axodotdev/cargo-dist/pull/1067" rel="noopener noreferrer">feat: support SHA-3 and BLAKE2</a></li>
+</ul>
+<h2>Improvements for installing tools within GitHub Actions</h2>
+<p>Previously, our installers would update the user's <code>PATH</code> for local commandline access but wouldn't set themselves up in the <code>PATH</code> within GitHub Actions. We've added a feature to the shell and Windows installers which detects if they're running within Actions and adds the newly-installed tool to <code>GITHUB_PATH</code> for future tasks within the job.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1047" rel="noopener noreferrer">feat: add paths to GITHUB_PATH if available</a></li>
+</ul>
+<h2>Custom installer output</h2>
+<p>When a shell or powershell installer runs successfully it will print out "everything's installed!", but if you want a different message that better matches your app's look-and-feel, or provides a more useful call-to-action, you can now do that with <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#install-success-msg" rel="noopener noreferrer">the <code>install-success-msg</code> setting</a>.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#install-success-msg" rel="noopener noreferrer">docs</a></li>
+<li>impl @ashleygwilliams <a href="https://github.com/axodotdev/cargo-dist/pull/1102" rel="noopener noreferrer">feat: custom success msg</a></li>
+</ul>
+<h2>Forcing prereleases to be the latest</h2>
+<p>cargo-dist has traditionally parsed the version number of new releases and used this to determine if the new release is a prerelease or a stable release. We apply some special handling to prereleases, such as marking them as prereleases within GitHub Releases. In 0.15.0, we've added the new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#force-latest" rel="noopener noreferrer"><code>force-latest</code></a> configuration flag which makes it possible to instruct cargo-dist to treat every release as the latest release regardless of its version number.</p>
+<p>This mostly exists to support projects who only plan to produce prereleases for the forseeable future, so that GitHub properly shows them in its UI.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#force-latest" rel="noopener noreferrer">docs</a></li>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1054" rel="noopener noreferrer">feat: allow always marking releases as stable</a></li>
+</ul>
+<h2>Configuring the global runner</h2>
+<p>In 0.6.0, we added support for configuring custom runners for native builds in GitHub Actions. However, until now, all other jobs still ran using our default runner. We've added a setting to the existing custom runner syntax that lets you specify what runner to use for all other jobs by using <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-custom-runners" rel="noopener noreferrer">the "global" key</a>.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-custom-runners" rel="noopener noreferrer">docs</a></li>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1055" rel="noopener noreferrer">feat: allow configuring global runner</a></li>
+</ul>
+<h2>Specify commit to publish to in external repo</h2>
+<p>In 0.14.0, we added the new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-repo" rel="noopener noreferrer"><code>github-releases-repo</code></a> configuration which allows publishing releases to an external repository rather than the one in which the CI job is running. The new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-submodule-path" rel="noopener noreferrer"><code>github-releases-submodule-path</code></a> configuration option enhances that with an additional feature: it allows specifying a submodule within the current repository to use to determine which commit to tag the new release as.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-submodule-path" rel="noopener noreferrer">docs</a></li>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1026" rel="noopener noreferrer">feat: allow specifying external commit from submodule</a></li>
+</ul>
+<h2>Fixes</h2>
+<ul>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1052" rel="noopener noreferrer">fix: improve reliability for fetching standalone updaters</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1037" rel="noopener noreferrer">fix: write correct install prefix to receipt</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1031" rel="noopener noreferrer">fix: bin_aliases should come from packages</a></li>
+<li>@Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1050" rel="noopener noreferrer">fix: repair and cleanup npm binary caching</a></li>
+<li>@sorairolake <a href="https://github.com/axodotdev/cargo-dist/pull/1066" rel="noopener noreferrer">fix: zstd file extension</a></li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.15.0-prerelease.21 (unreleased)</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.15.0-prerelease.21</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.15.0-prerelease.21</guid><content:encoded><![CDATA[<p>This release contains a ton of new features and some fixes.</p>
+<p>For the supplychain folks, we now support windows codesigning and several new hashing algorithms.</p>
+<p>For projects with complex repositories, we now have several new options for configuring the release process.</p>
+<h2>Windows codesigning</h2>
+<p>cargo-dist can automatically codesign Windows EXEs and MSIs using SSL.com's eSigner cloud signing service.</p>
+<p>Although there are many ways to do code signing, this process is specifically concerned with ensuring Windows SmartScreen recognizes the authenticity of the signatures and doesn't prevent your users from running the application. Otherwise, any user who downloads your application with a web browser will get a popup warning them against running it. (Alternative methods of downloading and installing, such as cargo-dist's powershell installers do not trigger SmartScreen.)</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/signing-and-attestation.html#windows-artifact-signing-with-sslcom-certificates" rel="noopener noreferrer">docs</a></li>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1036" rel="noopener noreferrer">feat: reimplement ssldotcom-windows-sign</a></li>
+</ul>
+<h2>Additional hash algorithms</h2>
+<p>The SHA-3 and BLAKE2 hash algorithms are now supported.</p>
+<p>Thanks to @sorairolake for contributing this!</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#checksum" rel="noopener noreferrer">docs</a></li>
+<li>impl @sorairolake <a href="https://github.com/axodotdev/cargo-dist/pull/1067" rel="noopener noreferrer">feat: support SHA-3 and BLAKE2</a></li>
+</ul>
+<h2>Improvements for installing tools within GitHub Actions</h2>
+<p>Previously, our installers would update the user's <code>PATH</code> for local commandline access but wouldn't set themselves up in the <code>PATH</code> within GitHub Actions. We've added a feature to the shell and Windows installers which detects if they're running within Actions and adds the newly-installed tool to <code>GITHUB_PATH</code> for future tasks within the job.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1047" rel="noopener noreferrer">feat: add paths to GITHUB_PATH if available</a></li>
+</ul>
+<h2>Custom installer output</h2>
+<p>When a shell or powershell installer runs successfully it will print out "everything's installed!", but if you want a different message that better matches your app's look-and-feel, or provides a more useful call-to-action, you can now do that with <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#install-success-msg" rel="noopener noreferrer">the <code>install-success-msg</code> setting</a>.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#install-success-msg" rel="noopener noreferrer">docs</a></li>
+<li>impl @ashleygwilliams <a href="https://github.com/axodotdev/cargo-dist/pull/1102" rel="noopener noreferrer">feat: custom success msg</a></li>
+</ul>
+<h2>Forcing prereleases to be the latest</h2>
+<p>cargo-dist has traditionally parsed the version number of new releases and used this to determine if the new release is a prerelease or a stable release. We apply some special handling to prereleases, such as marking them as prereleases within GitHub Releases. In 0.15.0, we've added the new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#force-latest" rel="noopener noreferrer"><code>force-latest</code></a> configuration flag which makes it possible to instruct cargo-dist to treat every release as the latest release regardless of its version number.</p>
+<p>This mostly exists to support projects who only plan to produce prereleases for the forseeable future, so that GitHub properly shows them in its UI.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#force-latest" rel="noopener noreferrer">docs</a></li>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1054" rel="noopener noreferrer">feat: allow always marking releases as stable</a></li>
+</ul>
+<h2>Configuring the global runner</h2>
+<p>In 0.6.0, we added support for configuring custom runners for native builds in GitHub Actions. However, until now, all other jobs still ran using our default runner. We've added a setting to the existing custom runner syntax that lets you specify what runner to use for all other jobs by using <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-custom-runners" rel="noopener noreferrer">the "global" key</a>.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-custom-runners" rel="noopener noreferrer">docs</a></li>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1055" rel="noopener noreferrer">feat: allow configuring global runner</a></li>
+</ul>
+<h2>Specify commit to publish to in external repo</h2>
+<p>In 0.14.0, we added the new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-repo" rel="noopener noreferrer"><code>github-releases-repo</code></a> configuration which allows publishing releases to an external repository rather than the one in which the CI job is running. The new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-submodule-path" rel="noopener noreferrer"><code>github-releases-submodule-path</code></a> configuration option enhances that with an additional feature: it allows specifying a submodule within the current repository to use to determine which commit to tag the new release as.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-submodule-path" rel="noopener noreferrer">docs</a></li>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1026" rel="noopener noreferrer">feat: allow specifying external commit from submodule</a></li>
+</ul>
+<h2>Fixes</h2>
+<ul>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1052" rel="noopener noreferrer">fix: improve reliability for fetching standalone updaters</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1037" rel="noopener noreferrer">fix: write correct install prefix to receipt</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1031" rel="noopener noreferrer">fix: bin_aliases should come from packages</a></li>
+<li>@Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1050" rel="noopener noreferrer">fix: repair and cleanup npm binary caching</a></li>
+<li>@sorairolake <a href="https://github.com/axodotdev/cargo-dist/pull/1066" rel="noopener noreferrer">fix: zstd file extension</a></li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.15.0-prerelease.20 (unreleased)</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.15.0-prerelease.20</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.15.0-prerelease.20</guid><content:encoded><![CDATA[<p>This release contains a ton of new features and some fixes.</p>
+<p>For the supplychain folks, we now support windows codesigning and several new hashing algorithms.</p>
+<p>For projects with complex repositories, we now have several new options for configuring the release process.</p>
+<h2>Windows codesigning</h2>
+<p>cargo-dist can automatically codesign Windows EXEs and MSIs using SSL.com's eSigner cloud signing service.</p>
+<p>Although there are many ways to do code signing, this process is specifically concerned with ensuring Windows SmartScreen recognizes the authenticity of the signatures and doesn't prevent your users from running the application. Otherwise, any user who downloads your application with a web browser will get a popup warning them against running it. (Alternative methods of downloading and installing, such as cargo-dist's powershell installers do not trigger SmartScreen.)</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/signing-and-attestation.html#windows-artifact-signing-with-sslcom-certificates" rel="noopener noreferrer">docs</a></li>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1036" rel="noopener noreferrer">feat: reimplement ssldotcom-windows-sign</a></li>
+</ul>
+<h2>Additional hash algorithms</h2>
+<p>The SHA-3 and BLAKE2 hash algorithms are now supported.</p>
+<p>Thanks to @sorairolake for contributing this!</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#checksum" rel="noopener noreferrer">docs</a></li>
+<li>impl @sorairolake <a href="https://github.com/axodotdev/cargo-dist/pull/1067" rel="noopener noreferrer">feat: support SHA-3 and BLAKE2</a></li>
+</ul>
+<h2>Improvements for installing tools within GitHub Actions</h2>
+<p>Previously, our installers would update the user's <code>PATH</code> for local commandline access but wouldn't set themselves up in the <code>PATH</code> within GitHub Actions. We've added a feature to the shell and Windows installers which detects if they're running within Actions and adds the newly-installed tool to <code>GITHUB_PATH</code> for future tasks within the job.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1047" rel="noopener noreferrer">feat: add paths to GITHUB_PATH if available</a></li>
+</ul>
+<h2>Custom installer output</h2>
+<p>When a shell or powershell installer runs successfully it will print out "everything's installed!", but if you want a different message that better matches your app's look-and-feel, or provides a more useful call-to-action, you can now do that with <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#install-success-msg" rel="noopener noreferrer">the <code>install-success-msg</code> setting</a>.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#install-success-msg" rel="noopener noreferrer">docs</a></li>
+<li>impl @ashleygwilliams <a href="https://github.com/axodotdev/cargo-dist/pull/1102" rel="noopener noreferrer">feat: custom success msg</a></li>
+</ul>
+<h2>Forcing prereleases to be the latest</h2>
+<p>cargo-dist has traditionally parsed the version number of new releases and used this to determine if the new release is a prerelease or a stable release. We apply some special handling to prereleases, such as marking them as prereleases within GitHub Releases. In 0.15.0, we've added the new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#force-latest" rel="noopener noreferrer"><code>force-latest</code></a> configuration flag which makes it possible to instruct cargo-dist to treat every release as the latest release regardless of its version number.</p>
+<p>This mostly exists to support projects who only plan to produce prereleases for the forseeable future, so that GitHub properly shows them in its UI.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#force-latest" rel="noopener noreferrer">docs</a></li>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1054" rel="noopener noreferrer">feat: allow always marking releases as stable</a></li>
+</ul>
+<h2>Configuring the global runner</h2>
+<p>In 0.6.0, we added support for configuring custom runners for native builds in GitHub Actions. However, until now, all other jobs still ran using our default runner. We've added a setting to the existing custom runner syntax that lets you specify what runner to use for all other jobs by using <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-custom-runners" rel="noopener noreferrer">the "global" key</a>.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-custom-runners" rel="noopener noreferrer">docs</a></li>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1055" rel="noopener noreferrer">feat: allow configuring global runner</a></li>
+</ul>
+<h2>Specify commit to publish to in external repo</h2>
+<p>In 0.14.0, we added the new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-repo" rel="noopener noreferrer"><code>github-releases-repo</code></a> configuration which allows publishing releases to an external repository rather than the one in which the CI job is running. The new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-submodule-path" rel="noopener noreferrer"><code>github-releases-submodule-path</code></a> configuration option enhances that with an additional feature: it allows specifying a submodule within the current repository to use to determine which commit to tag the new release as.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-submodule-path" rel="noopener noreferrer">docs</a></li>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1026" rel="noopener noreferrer">feat: allow specifying external commit from submodule</a></li>
+</ul>
+<h2>Fixes</h2>
+<ul>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1052" rel="noopener noreferrer">fix: improve reliability for fetching standalone updaters</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1037" rel="noopener noreferrer">fix: write correct install prefix to receipt</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1031" rel="noopener noreferrer">fix: bin_aliases should come from packages</a></li>
+<li>@Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1050" rel="noopener noreferrer">fix: repair and cleanup npm binary caching</a></li>
+<li>@sorairolake <a href="https://github.com/axodotdev/cargo-dist/pull/1066" rel="noopener noreferrer">fix: zstd file extension</a></li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.15.0-prerelease.19 (unreleased)</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.15.0-prerelease.19</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.15.0-prerelease.19</guid><content:encoded><![CDATA[<p>This release contains a ton of new features and some fixes.</p>
+<p>For the supplychain folks, we now support windows codesigning and several new hashing algorithms.</p>
+<p>For projects with complex repositories, we now have several new options for configuring the release process.</p>
+<h2>Windows codesigning</h2>
+<p>cargo-dist can automatically codesign Windows EXEs and MSIs using SSL.com's eSigner cloud signing service.</p>
+<p>Although there are many ways to do code signing, this process is specifically concerned with ensuring Windows SmartScreen recognizes the authenticity of the signatures and doesn't prevent your users from running the application. Otherwise, any user who downloads your application with a web browser will get a popup warning them against running it. (Alternative methods of downloading and installing, such as cargo-dist's powershell installers do not trigger SmartScreen.)</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/signing-and-attestation.html#windows-artifact-signing-with-sslcom-certificates" rel="noopener noreferrer">docs</a></li>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1036" rel="noopener noreferrer">feat: reimplement ssldotcom-windows-sign</a></li>
+</ul>
+<h2>Additional hash algorithms</h2>
+<p>The SHA-3 and BLAKE2 hash algorithms are now supported.</p>
+<p>Thanks to @sorairolake for contributing this!</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#checksum" rel="noopener noreferrer">docs</a></li>
+<li>impl @sorairolake <a href="https://github.com/axodotdev/cargo-dist/pull/1067" rel="noopener noreferrer">feat: support SHA-3 and BLAKE2</a></li>
+</ul>
+<h2>Improvements for installing tools within GitHub Actions</h2>
+<p>Previously, our installers would update the user's <code>PATH</code> for local commandline access but wouldn't set themselves up in the <code>PATH</code> within GitHub Actions. We've added a feature to the shell and Windows installers which detects if they're running within Actions and adds the newly-installed tool to <code>GITHUB_PATH</code> for future tasks within the job.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1047" rel="noopener noreferrer">feat: add paths to GITHUB_PATH if available</a></li>
+</ul>
+<h2>Custom installer output</h2>
+<p>When a shell or powershell installer runs successfully it will print out "everything's installed!", but if you want a different message that better matches your app's look-and-feel, or provides a more useful call-to-action, you can now do that with <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#install-success-msg" rel="noopener noreferrer">the <code>install-success-msg</code> setting</a>.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#install-success-msg" rel="noopener noreferrer">docs</a></li>
+<li>impl @ashleygwilliams <a href="https://github.com/axodotdev/cargo-dist/pull/1102" rel="noopener noreferrer">feat: custom success msg</a></li>
+</ul>
+<h2>Forcing prereleases to be the latest</h2>
+<p>cargo-dist has traditionally parsed the version number of new releases and used this to determine if the new release is a prerelease or a stable release. We apply some special handling to prereleases, such as marking them as prereleases within GitHub Releases. In 0.15.0, we've added the new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#force-latest" rel="noopener noreferrer"><code>force-latest</code></a> configuration flag which makes it possible to instruct cargo-dist to treat every release as the latest release regardless of its version number.</p>
+<p>This mostly exists to support projects who only plan to produce prereleases for the forseeable future, so that GitHub properly shows them in its UI.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#force-latest" rel="noopener noreferrer">docs</a></li>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1054" rel="noopener noreferrer">feat: allow always marking releases as stable</a></li>
+</ul>
+<h2>Configuring the global runner</h2>
+<p>In 0.6.0, we added support for configuring custom runners for native builds in GitHub Actions. However, until now, all other jobs still ran using our default runner. We've added a setting to the existing custom runner syntax that lets you specify what runner to use for all other jobs by using <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-custom-runners" rel="noopener noreferrer">the "global" key</a>.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-custom-runners" rel="noopener noreferrer">docs</a></li>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1055" rel="noopener noreferrer">feat: allow configuring global runner</a></li>
+</ul>
+<h2>Specify commit to publish to in external repo</h2>
+<p>In 0.14.0, we added the new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-repo" rel="noopener noreferrer"><code>github-releases-repo</code></a> configuration which allows publishing releases to an external repository rather than the one in which the CI job is running. The new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-submodule-path" rel="noopener noreferrer"><code>github-releases-submodule-path</code></a> configuration option enhances that with an additional feature: it allows specifying a submodule within the current repository to use to determine which commit to tag the new release as.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-submodule-path" rel="noopener noreferrer">docs</a></li>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1026" rel="noopener noreferrer">feat: allow specifying external commit from submodule</a></li>
+</ul>
+<h2>Fixes</h2>
+<ul>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1052" rel="noopener noreferrer">fix: improve reliability for fetching standalone updaters</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1037" rel="noopener noreferrer">fix: write correct install prefix to receipt</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1031" rel="noopener noreferrer">fix: bin_aliases should come from packages</a></li>
+<li>@Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1050" rel="noopener noreferrer">fix: repair and cleanup npm binary caching</a></li>
+<li>@sorairolake <a href="https://github.com/axodotdev/cargo-dist/pull/1066" rel="noopener noreferrer">fix: zstd file extension</a></li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.15.0-prerelease.18 (unreleased)</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.15.0-prerelease.18</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.15.0-prerelease.18</guid><content:encoded><![CDATA[<p>This release contains a ton of new features and some fixes.</p>
+<p>For the supplychain folks, we now support windows codesigning and several new hashing algorithms.</p>
+<p>For projects with complex repositories, we now have several new options for configuring the release process.</p>
+<h2>Windows codesigning</h2>
+<p>cargo-dist can automatically codesign Windows EXEs and MSIs using SSL.com's eSigner cloud signing service.</p>
+<p>Although there are many ways to do code signing, this process is specifically concerned with ensuring Windows SmartScreen recognizes the authenticity of the signatures and doesn't prevent your users from running the application. Otherwise, any user who downloads your application with a web browser will get a popup warning them against running it. (Alternative methods of downloading and installing, such as cargo-dist's powershell installers do not trigger SmartScreen.)</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/signing-and-attestation.html#windows-artifact-signing-with-sslcom-certificates" rel="noopener noreferrer">docs</a></li>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1036" rel="noopener noreferrer">feat: reimplement ssldotcom-windows-sign</a></li>
+</ul>
+<h2>Additional hash algorithms</h2>
+<p>The SHA-3 and BLAKE2 hash algorithms are now supported.</p>
+<p>Thanks to @sorairolake for contributing this!</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#checksum" rel="noopener noreferrer">docs</a></li>
+<li>impl @sorairolake <a href="https://github.com/axodotdev/cargo-dist/pull/1067" rel="noopener noreferrer">feat: support SHA-3 and BLAKE2</a></li>
+</ul>
+<h2>Improvements for installing tools within GitHub Actions</h2>
+<p>Previously, our installers would update the user's <code>PATH</code> for local commandline access but wouldn't set themselves up in the <code>PATH</code> within GitHub Actions. We've added a feature to the shell and Windows installers which detects if they're running within Actions and adds the newly-installed tool to <code>GITHUB_PATH</code> for future tasks within the job.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1047" rel="noopener noreferrer">feat: add paths to GITHUB_PATH if available</a></li>
+</ul>
+<h2>Custom installer output</h2>
+<p>When a shell or powershell installer runs successfully it will print out "everything's installed!", but if you want a different message that better matches your app's look-and-feel, or provides a more useful call-to-action, you can now do that with <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#install-success-msg" rel="noopener noreferrer">the <code>install-success-msg</code> setting</a>.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#install-success-msg" rel="noopener noreferrer">docs</a></li>
+<li>impl @ashleygwilliams <a href="https://github.com/axodotdev/cargo-dist/pull/1102" rel="noopener noreferrer">feat: custom success msg</a></li>
+</ul>
+<h2>Forcing prereleases to be the latest</h2>
+<p>cargo-dist has traditionally parsed the version number of new releases and used this to determine if the new release is a prerelease or a stable release. We apply some special handling to prereleases, such as marking them as prereleases within GitHub Releases. In 0.15.0, we've added the new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#force-latest" rel="noopener noreferrer"><code>force-latest</code></a> configuration flag which makes it possible to instruct cargo-dist to treat every release as the latest release regardless of its version number.</p>
+<p>This mostly exists to support projects who only plan to produce prereleases for the forseeable future, so that GitHub properly shows them in its UI.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#force-latest" rel="noopener noreferrer">docs</a></li>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1054" rel="noopener noreferrer">feat: allow always marking releases as stable</a></li>
+</ul>
+<h2>Configuring the global runner</h2>
+<p>In 0.6.0, we added support for configuring custom runners for native builds in GitHub Actions. However, until now, all other jobs still ran using our default runner. We've added a setting to the existing custom runner syntax that lets you specify what runner to use for all other jobs by using <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-custom-runners" rel="noopener noreferrer">the "global" key</a>.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-custom-runners" rel="noopener noreferrer">docs</a></li>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1055" rel="noopener noreferrer">feat: allow configuring global runner</a></li>
+</ul>
+<h2>Specify commit to publish to in external repo</h2>
+<p>In 0.14.0, we added the new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-repo" rel="noopener noreferrer"><code>github-releases-repo</code></a> configuration which allows publishing releases to an external repository rather than the one in which the CI job is running. The new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-submodule-path" rel="noopener noreferrer"><code>github-releases-submodule-path</code></a> configuration option enhances that with an additional feature: it allows specifying a submodule within the current repository to use to determine which commit to tag the new release as.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-submodule-path" rel="noopener noreferrer">docs</a></li>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1026" rel="noopener noreferrer">feat: allow specifying external commit from submodule</a></li>
+</ul>
+<h2>Fixes</h2>
+<ul>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1052" rel="noopener noreferrer">fix: improve reliability for fetching standalone updaters</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1037" rel="noopener noreferrer">fix: write correct install prefix to receipt</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1031" rel="noopener noreferrer">fix: bin_aliases should come from packages</a></li>
+<li>@Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1050" rel="noopener noreferrer">fix: repair and cleanup npm binary caching</a></li>
+<li>@sorairolake <a href="https://github.com/axodotdev/cargo-dist/pull/1066" rel="noopener noreferrer">fix: zstd file extension</a></li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.15.0-prerelease.15</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.15.0-prerelease.15</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.15.0-prerelease.15</guid><content:encoded><![CDATA[<p>This release contains a ton of new features and some fixes.</p>
+<p>For the supplychain folks, we now support windows codesigning and several new hashing algorithms.</p>
+<p>For projects with complex repositories, we now have several new options for configuring the release process.</p>
+<h2>Windows codesigning</h2>
+<p>cargo-dist can automatically codesign Windows EXEs and MSIs using SSL.com's eSigner cloud signing service.</p>
+<p>Although there are many ways to do code signing, this process is specifically concerned with ensuring Windows SmartScreen recognizes the authenticity of the signatures and doesn't prevent your users from running the application. Otherwise, any user who downloads your application with a web browser will get a popup warning them against running it. (Alternative methods of downloading and installing, such as cargo-dist's powershell installers do not trigger SmartScreen.)</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/signing-and-attestation.html#windows-artifact-signing-with-sslcom-certificates" rel="noopener noreferrer">docs</a></li>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1036" rel="noopener noreferrer">feat: reimplement ssldotcom-windows-sign</a></li>
+</ul>
+<h2>Additional hash algorithms</h2>
+<p>The SHA-3 and BLAKE2 hash algorithms are now supported.</p>
+<p>Thanks to @sorairolake for contributing this!</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#checksum" rel="noopener noreferrer">docs</a></li>
+<li>impl @sorairolake <a href="https://github.com/axodotdev/cargo-dist/pull/1067" rel="noopener noreferrer">feat: support SHA-3 and BLAKE2</a></li>
+</ul>
+<h2>Improvements for installing tools within GitHub Actions</h2>
+<p>Previously, our installers would update the user's <code>PATH</code> for local commandline access but wouldn't set themselves up in the <code>PATH</code> within GitHub Actions. We've added a feature to the shell and Windows installers which detects if they're running within Actions and adds the newly-installed tool to <code>GITHUB_PATH</code> for future tasks within the job.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1047" rel="noopener noreferrer">feat: add paths to GITHUB_PATH if available</a></li>
+</ul>
+<h2>Custom installer output</h2>
+<p>When a shell or powershell installer runs successfully it will print out "everything's installed!", but if you want a different message that better matches your app's look-and-feel, or provides a more useful call-to-action, you can now do that with <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#install-success-msg" rel="noopener noreferrer">the <code>install-success-msg</code> setting</a>.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#install-success-msg" rel="noopener noreferrer">docs</a></li>
+<li>impl @ashleygwilliams <a href="https://github.com/axodotdev/cargo-dist/pull/1102" rel="noopener noreferrer">feat: custom success msg</a></li>
+</ul>
+<h2>Forcing prereleases to be the latest</h2>
+<p>cargo-dist has traditionally parsed the version number of new releases and used this to determine if the new release is a prerelease or a stable release. We apply some special handling to prereleases, such as marking them as prereleases within GitHub Releases. In 0.15.0, we've added the new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#force-latest" rel="noopener noreferrer"><code>force-latest</code></a> configuration flag which makes it possible to instruct cargo-dist to treat every release as the latest release regardless of its version number.</p>
+<p>This mostly exists to support projects who only plan to produce prereleases for the forseeable future, so that GitHub properly shows them in its UI.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#force-latest" rel="noopener noreferrer">docs</a></li>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1054" rel="noopener noreferrer">feat: allow always marking releases as stable</a></li>
+</ul>
+<h2>Configuring the global runner</h2>
+<p>In 0.6.0, we added support for configuring custom runners for native builds in GitHub Actions. However, until now, all other jobs still ran using our default runner. We've added a setting to the existing custom runner syntax that lets you specify what runner to use for all other jobs by using <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-custom-runners" rel="noopener noreferrer">the "global" key</a>.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-custom-runners" rel="noopener noreferrer">docs</a></li>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1055" rel="noopener noreferrer">feat: allow configuring global runner</a></li>
+</ul>
+<h2>Specify commit to publish to in external repo</h2>
+<p>In 0.14.0, we added the new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-repo" rel="noopener noreferrer"><code>github-releases-repo</code></a> configuration which allows publishing releases to an external repository rather than the one in which the CI job is running. The new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-submodule-path" rel="noopener noreferrer"><code>github-releases-submodule-path</code></a> configuration option enhances that with an additional feature: it allows specifying a submodule within the current repository to use to determine which commit to tag the new release as.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-submodule-path" rel="noopener noreferrer">docs</a></li>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1026" rel="noopener noreferrer">feat: allow specifying external commit from submodule</a></li>
+</ul>
+<h2>Fixes</h2>
+<ul>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1052" rel="noopener noreferrer">fix: improve reliability for fetching standalone updaters</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1037" rel="noopener noreferrer">fix: write correct install prefix to receipt</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1031" rel="noopener noreferrer">fix: bin_aliases should come from packages</a></li>
+<li>@Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1050" rel="noopener noreferrer">fix: repair and cleanup npm binary caching</a></li>
+<li>@sorairolake <a href="https://github.com/axodotdev/cargo-dist/pull/1066" rel="noopener noreferrer">fix: zstd file extension</a></li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.15.0-prerelease.14</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.15.0-prerelease.14</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.15.0-prerelease.14</guid><content:encoded><![CDATA[<p>This release contains a ton of new features and some fixes.</p>
+<p>For the supplychain folks, we now support windows codesigning and several new hashing algorithms.</p>
+<p>For projects with complex repositories, we now have several new options for configuring the release process.</p>
+<h2>Windows codesigning</h2>
+<p>cargo-dist can automatically codesign Windows EXEs and MSIs using SSL.com's eSigner cloud signing service.</p>
+<p>Although there are many ways to do code signing, this process is specifically concerned with ensuring Windows SmartScreen recognizes the authenticity of the signatures and doesn't prevent your users from running the application. Otherwise, any user who downloads your application with a web browser will get a popup warning them against running it. (Alternative methods of downloading and installing, such as cargo-dist's powershell installers do not trigger SmartScreen.)</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/signing-and-attestation.html#windows-artifact-signing-with-sslcom-certificates" rel="noopener noreferrer">docs</a></li>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1036" rel="noopener noreferrer">feat: reimplement ssldotcom-windows-sign</a></li>
+</ul>
+<h2>Additional hash algorithms</h2>
+<p>The SHA-3 and BLAKE2 hash algorithms are now supported.</p>
+<p>Thanks to @sorairolake for contributing this!</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#checksum" rel="noopener noreferrer">docs</a></li>
+<li>impl @sorairolake <a href="https://github.com/axodotdev/cargo-dist/pull/1067" rel="noopener noreferrer">feat: support SHA-3 and BLAKE2</a></li>
+</ul>
+<h2>Improvements for installing tools within GitHub Actions</h2>
+<p>Previously, our installers would update the user's <code>PATH</code> for local commandline access but wouldn't set themselves up in the <code>PATH</code> within GitHub Actions. We've added a feature to the shell and Windows installers which detects if they're running within Actions and adds the newly-installed tool to <code>GITHUB_PATH</code> for future tasks within the job.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1047" rel="noopener noreferrer">feat: add paths to GITHUB_PATH if available</a></li>
+</ul>
+<h2>Custom installer output</h2>
+<p>When a shell or powershell installer runs successfully it will print out "everything's installed!", but if you want a different message that better matches your app's look-and-feel, or provides a more useful call-to-action, you can now do that with <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#install-success-msg" rel="noopener noreferrer">the <code>install-success-msg</code> setting</a>.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#install-success-msg" rel="noopener noreferrer">docs</a></li>
+<li>impl @ashleygwilliams <a href="https://github.com/axodotdev/cargo-dist/pull/1102" rel="noopener noreferrer">feat: custom success msg</a></li>
+</ul>
+<h2>Forcing prereleases to be the latest</h2>
+<p>cargo-dist has traditionally parsed the version number of new releases and used this to determine if the new release is a prerelease or a stable release. We apply some special handling to prereleases, such as marking them as prereleases within GitHub Releases. In 0.15.0, we've added the new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#force-latest" rel="noopener noreferrer"><code>force-latest</code></a> configuration flag which makes it possible to instruct cargo-dist to treat every release as the latest release regardless of its version number.</p>
+<p>This mostly exists to support projects who only plan to produce prereleases for the forseeable future, so that GitHub properly shows them in its UI.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#force-latest" rel="noopener noreferrer">docs</a></li>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1054" rel="noopener noreferrer">feat: allow always marking releases as stable</a></li>
+</ul>
+<h2>Configuring the global runner</h2>
+<p>In 0.6.0, we added support for configuring custom runners for native builds in GitHub Actions. However, until now, all other jobs still ran using our default runner. We've added a setting to the existing custom runner syntax that lets you specify what runner to use for all other jobs by using <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-custom-runners" rel="noopener noreferrer">the "global" key</a>.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-custom-runners" rel="noopener noreferrer">docs</a></li>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1055" rel="noopener noreferrer">feat: allow configuring global runner</a></li>
+</ul>
+<h2>Specify commit to publish to in external repo</h2>
+<p>In 0.14.0, we added the new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-repo" rel="noopener noreferrer"><code>github-releases-repo</code></a> configuration which allows publishing releases to an external repository rather than the one in which the CI job is running. The new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-submodule-path" rel="noopener noreferrer"><code>github-releases-submodule-path</code></a> configuration option enhances that with an additional feature: it allows specifying a submodule within the current repository to use to determine which commit to tag the new release as.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-submodule-path" rel="noopener noreferrer">docs</a></li>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1026" rel="noopener noreferrer">feat: allow specifying external commit from submodule</a></li>
+</ul>
+<h2>Fixes</h2>
+<ul>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1052" rel="noopener noreferrer">fix: improve reliability for fetching standalone updaters</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1037" rel="noopener noreferrer">fix: write correct install prefix to receipt</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1031" rel="noopener noreferrer">fix: bin_aliases should come from packages</a></li>
+<li>@Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1050" rel="noopener noreferrer">fix: repair and cleanup npm binary caching</a></li>
+<li>@sorairolake <a href="https://github.com/axodotdev/cargo-dist/pull/1066" rel="noopener noreferrer">fix: zstd file extension</a></li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.15.0-prerelease.13</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.15.0-prerelease.13</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.15.0-prerelease.13</guid><content:encoded><![CDATA[<p>This release contains a ton of new features and some fixes.</p>
+<p>For the supplychain folks, we now support windows codesigning and several new hashing algorithms.</p>
+<p>For projects with complex repositories, we now have several new options for configuring the release process.</p>
+<h2>Windows codesigning</h2>
+<p>cargo-dist can automatically codesign Windows EXEs and MSIs using SSL.com's eSigner cloud signing service.</p>
+<p>Although there are many ways to do code signing, this process is specifically concerned with ensuring Windows SmartScreen recognizes the authenticity of the signatures and doesn't prevent your users from running the application. Otherwise, any user who downloads your application with a web browser will get a popup warning them against running it. (Alternative methods of downloading and installing, such as cargo-dist's powershell installers do not trigger SmartScreen.)</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/signing-and-attestation.html#windows-artifact-signing-with-sslcom-certificates" rel="noopener noreferrer">docs</a></li>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1036" rel="noopener noreferrer">feat: reimplement ssldotcom-windows-sign</a></li>
+</ul>
+<h2>Additional hash algorithms</h2>
+<p>The SHA-3 and BLAKE2 hash algorithms are now supported.</p>
+<p>Thanks to @sorairolake for contributing this!</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#checksum" rel="noopener noreferrer">docs</a></li>
+<li>impl @sorairolake <a href="https://github.com/axodotdev/cargo-dist/pull/1067" rel="noopener noreferrer">feat: support SHA-3 and BLAKE2</a></li>
+</ul>
+<h2>Improvements for installing tools within GitHub Actions</h2>
+<p>Previously, our installers would update the user's <code>PATH</code> for local commandline access but wouldn't set themselves up in the <code>PATH</code> within GitHub Actions. We've added a feature to the shell and Windows installers which detects if they're running within Actions and adds the newly-installed tool to <code>GITHUB_PATH</code> for future tasks within the job.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1047" rel="noopener noreferrer">feat: add paths to GITHUB_PATH if available</a></li>
+</ul>
+<h2>Custom installer output</h2>
+<p>When a shell or powershell installer runs successfully it will print out "everything's installed!", but if you want a different message that better matches your app's look-and-feel, or provides a more useful call-to-action, you can now do that with <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#install-success-msg" rel="noopener noreferrer">the <code>install-success-msg</code> setting</a>.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#install-success-msg" rel="noopener noreferrer">docs</a></li>
+<li>impl @ashleygwilliams <a href="https://github.com/axodotdev/cargo-dist/pull/1102" rel="noopener noreferrer">feat: custom success msg</a></li>
+</ul>
+<h2>Forcing prereleases to be the latest</h2>
+<p>cargo-dist has traditionally parsed the version number of new releases and used this to determine if the new release is a prerelease or a stable release. We apply some special handling to prereleases, such as marking them as prereleases within GitHub Releases. In 0.15.0, we've added the new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#force-latest" rel="noopener noreferrer"><code>force-latest</code></a> configuration flag which makes it possible to instruct cargo-dist to treat every release as the latest release regardless of its version number.</p>
+<p>This mostly exists to support projects who only plan to produce prereleases for the forseeable future, so that GitHub properly shows them in its UI.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#force-latest" rel="noopener noreferrer">docs</a></li>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1054" rel="noopener noreferrer">feat: allow always marking releases as stable</a></li>
+</ul>
+<h2>Configuring the global runner</h2>
+<p>In 0.6.0, we added support for configuring custom runners for native builds in GitHub Actions. However, until now, all other jobs still ran using our default runner. We've added a setting to the existing custom runner syntax that lets you specify what runner to use for all other jobs by using <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-custom-runners" rel="noopener noreferrer">the "global" key</a>.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-custom-runners" rel="noopener noreferrer">docs</a></li>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1055" rel="noopener noreferrer">feat: allow configuring global runner</a></li>
+</ul>
+<h2>Specify commit to publish to in external repo</h2>
+<p>In 0.14.0, we added the new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-repo" rel="noopener noreferrer"><code>github-releases-repo</code></a> configuration which allows publishing releases to an external repository rather than the one in which the CI job is running. The new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-submodule-path" rel="noopener noreferrer"><code>github-releases-submodule-path</code></a> configuration option enhances that with an additional feature: it allows specifying a submodule within the current repository to use to determine which commit to tag the new release as.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-submodule-path" rel="noopener noreferrer">docs</a></li>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1026" rel="noopener noreferrer">feat: allow specifying external commit from submodule</a></li>
+</ul>
+<h2>Fixes</h2>
+<ul>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1052" rel="noopener noreferrer">fix: improve reliability for fetching standalone updaters</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1037" rel="noopener noreferrer">fix: write correct install prefix to receipt</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1031" rel="noopener noreferrer">fix: bin_aliases should come from packages</a></li>
+<li>@Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1050" rel="noopener noreferrer">fix: repair and cleanup npm binary caching</a></li>
+<li>@sorairolake <a href="https://github.com/axodotdev/cargo-dist/pull/1066" rel="noopener noreferrer">fix: zstd file extension</a></li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.15.0-prerelease.12</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.15.0-prerelease.12</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.15.0-prerelease.12</guid><content:encoded><![CDATA[<p>This release contains a ton of new features and some fixes.</p>
+<p>For the supplychain folks, we now support windows codesigning and several new hashing algorithms.</p>
+<p>For projects with complex repositories, we now have several new options for configuring the release process.</p>
+<h2>Windows codesigning</h2>
+<p>cargo-dist can automatically codesign Windows EXEs and MSIs using SSL.com's eSigner cloud signing service.</p>
+<p>Although there are many ways to do code signing, this process is specifically concerned with ensuring Windows SmartScreen recognizes the authenticity of the signatures and doesn't prevent your users from running the application. Otherwise, any user who downloads your application with a web browser will get a popup warning them against running it. (Alternative methods of downloading and installing, such as cargo-dist's powershell installers do not trigger SmartScreen.)</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/signing-and-attestation.html#windows-artifact-signing-with-sslcom-certificates" rel="noopener noreferrer">docs</a></li>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1036" rel="noopener noreferrer">feat: reimplement ssldotcom-windows-sign</a></li>
+</ul>
+<h2>Additional hash algorithms</h2>
+<p>The SHA-3 and BLAKE2 hash algorithms are now supported.</p>
+<p>Thanks to @sorairolake for contributing this!</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#checksum" rel="noopener noreferrer">docs</a></li>
+<li>impl @sorairolake <a href="https://github.com/axodotdev/cargo-dist/pull/1067" rel="noopener noreferrer">feat: support SHA-3 and BLAKE2</a></li>
+</ul>
+<h2>Improvements for installing tools within GitHub Actions</h2>
+<p>Previously, our installers would update the user's <code>PATH</code> for local commandline access but wouldn't set themselves up in the <code>PATH</code> within GitHub Actions. We've added a feature to the shell and Windows installers which detects if they're running within Actions and adds the newly-installed tool to <code>GITHUB_PATH</code> for future tasks within the job.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1047" rel="noopener noreferrer">feat: add paths to GITHUB_PATH if available</a></li>
+</ul>
+<h2>Custom installer output</h2>
+<p>When a shell or powershell installer runs successfully it will print out "everything's installed!", but if you want a different message that better matches your app's look-and-feel, or provides a more useful call-to-action, you can now do that with <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#install-success-msg" rel="noopener noreferrer">the <code>install-success-msg</code> setting</a>.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#install-success-msg" rel="noopener noreferrer">docs</a></li>
+<li>impl @ashleygwilliams <a href="https://github.com/axodotdev/cargo-dist/pull/1102" rel="noopener noreferrer">feat: custom success msg</a></li>
+</ul>
+<h2>Forcing prereleases to be the latest</h2>
+<p>cargo-dist has traditionally parsed the version number of new releases and used this to determine if the new release is a prerelease or a stable release. We apply some special handling to prereleases, such as marking them as prereleases within GitHub Releases. In 0.15.0, we've added the new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#force-latest" rel="noopener noreferrer"><code>force-latest</code></a> configuration flag which makes it possible to instruct cargo-dist to treat every release as the latest release regardless of its version number.</p>
+<p>This mostly exists to support projects who only plan to produce prereleases for the forseeable future, so that GitHub properly shows them in its UI.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#force-latest" rel="noopener noreferrer">docs</a></li>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1054" rel="noopener noreferrer">feat: allow always marking releases as stable</a></li>
+</ul>
+<h2>Configuring the global runner</h2>
+<p>In 0.6.0, we added support for configuring custom runners for native builds in GitHub Actions. However, until now, all other jobs still ran using our default runner. We've added a setting to the existing custom runner syntax that lets you specify what runner to use for all other jobs by using <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-custom-runners" rel="noopener noreferrer">the "global" key</a>.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-custom-runners" rel="noopener noreferrer">docs</a></li>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1055" rel="noopener noreferrer">feat: allow configuring global runner</a></li>
+</ul>
+<h2>Specify commit to publish to in external repo</h2>
+<p>In 0.14.0, we added the new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-repo" rel="noopener noreferrer"><code>github-releases-repo</code></a> configuration which allows publishing releases to an external repository rather than the one in which the CI job is running. The new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-submodule-path" rel="noopener noreferrer"><code>github-releases-submodule-path</code></a> configuration option enhances that with an additional feature: it allows specifying a submodule within the current repository to use to determine which commit to tag the new release as.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-submodule-path" rel="noopener noreferrer">docs</a></li>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1026" rel="noopener noreferrer">feat: allow specifying external commit from submodule</a></li>
+</ul>
+<h2>Fixes</h2>
+<ul>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1052" rel="noopener noreferrer">fix: improve reliability for fetching standalone updaters</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1037" rel="noopener noreferrer">fix: write correct install prefix to receipt</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1031" rel="noopener noreferrer">fix: bin_aliases should come from packages</a></li>
+<li>@Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1050" rel="noopener noreferrer">fix: repair and cleanup npm binary caching</a></li>
+<li>@sorairolake <a href="https://github.com/axodotdev/cargo-dist/pull/1066" rel="noopener noreferrer">fix: zstd file extension</a></li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.15.0-prerelease.9</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.15.0-prerelease.9</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.15.0-prerelease.9</guid><content:encoded><![CDATA[<p>This release contains a ton of new features and some fixes.</p>
+<p>For the supplychain folks, we now support windows codesigning and several new hashing algorithms.</p>
+<p>For projects with complex repositories, we now have several new options for configuring the release process.</p>
+<h2>Windows codesigning</h2>
+<p>cargo-dist can automatically codesign Windows EXEs and MSIs using SSL.com's eSigner cloud signing service.</p>
+<p>Although there are many ways to do code signing, this process is specifically concerned with ensuring Windows SmartScreen recognizes the authenticity of the signatures and doesn't prevent your users from running the application. Otherwise, any user who downloads your application with a web browser will get a popup warning them against running it. (Alternative methods of downloading and installing, such as cargo-dist's powershell installers do not trigger SmartScreen.)</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/signing-and-attestation.html#windows-artifact-signing-with-sslcom-certificates" rel="noopener noreferrer">docs</a></li>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1036" rel="noopener noreferrer">feat: reimplement ssldotcom-windows-sign</a></li>
+</ul>
+<h2>Additional hash algorithms</h2>
+<p>The SHA-3 and BLAKE2 hash algorithms are now supported.</p>
+<p>Thanks to @sorairolake for contributing this!</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#checksum" rel="noopener noreferrer">docs</a></li>
+<li>impl @sorairolake <a href="https://github.com/axodotdev/cargo-dist/pull/1067" rel="noopener noreferrer">feat: support SHA-3 and BLAKE2</a></li>
+</ul>
+<h2>Improvements for installing tools within GitHub Actions</h2>
+<p>Previously, our installers would update the user's <code>PATH</code> for local commandline access but wouldn't set themselves up in the <code>PATH</code> within GitHub Actions. We've added a feature to the shell and Windows installers which detects if they're running within Actions and adds the newly-installed tool to <code>GITHUB_PATH</code> for future tasks within the job.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1047" rel="noopener noreferrer">feat: add paths to GITHUB_PATH if available</a></li>
+</ul>
+<h2>Custom installer output</h2>
+<p>When a shell or powershell installer runs successfully it will print out "everything's installed!", but if you want a different message that better matches your app's look-and-feel, or provides a more useful call-to-action, you can now do that with <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#install-success-msg" rel="noopener noreferrer">the <code>install-success-msg</code> setting</a>.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#install-success-msg" rel="noopener noreferrer">docs</a></li>
+<li>impl @ashleygwilliams <a href="https://github.com/axodotdev/cargo-dist/pull/1102" rel="noopener noreferrer">feat: custom success msg</a></li>
+</ul>
+<h2>Forcing prereleases to be the latest</h2>
+<p>cargo-dist has traditionally parsed the version number of new releases and used this to determine if the new release is a prerelease or a stable release. We apply some special handling to prereleases, such as marking them as prereleases within GitHub Releases. In 0.15.0, we've added the new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#force-latest" rel="noopener noreferrer"><code>force-latest</code></a> configuration flag which makes it possible to instruct cargo-dist to treat every release as the latest release regardless of its version number.</p>
+<p>This mostly exists to support projects who only plan to produce prereleases for the forseeable future, so that GitHub properly shows them in its UI.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#force-latest" rel="noopener noreferrer">docs</a></li>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1054" rel="noopener noreferrer">feat: allow always marking releases as stable</a></li>
+</ul>
+<h2>Configuring the global runner</h2>
+<p>In 0.6.0, we added support for configuring custom runners for native builds in GitHub Actions. However, until now, all other jobs still ran using our default runner. We've added a setting to the existing custom runner syntax that lets you specify what runner to use for all other jobs by using <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-custom-runners" rel="noopener noreferrer">the "global" key</a>.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-custom-runners" rel="noopener noreferrer">docs</a></li>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1055" rel="noopener noreferrer">feat: allow configuring global runner</a></li>
+</ul>
+<h2>Specify commit to publish to in external repo</h2>
+<p>In 0.14.0, we added the new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-repo" rel="noopener noreferrer"><code>github-releases-repo</code></a> configuration which allows publishing releases to an external repository rather than the one in which the CI job is running. The new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-submodule-path" rel="noopener noreferrer"><code>github-releases-submodule-path</code></a> configuration option enhances that with an additional feature: it allows specifying a submodule within the current repository to use to determine which commit to tag the new release as.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-submodule-path" rel="noopener noreferrer">docs</a></li>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1026" rel="noopener noreferrer">feat: allow specifying external commit from submodule</a></li>
+</ul>
+<h2>Fixes</h2>
+<ul>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1052" rel="noopener noreferrer">fix: improve reliability for fetching standalone updaters</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1037" rel="noopener noreferrer">fix: write correct install prefix to receipt</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1031" rel="noopener noreferrer">fix: bin_aliases should come from packages</a></li>
+<li>@Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1050" rel="noopener noreferrer">fix: repair and cleanup npm binary caching</a></li>
+<li>@sorairolake <a href="https://github.com/axodotdev/cargo-dist/pull/1066" rel="noopener noreferrer">fix: zstd file extension</a></li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.15.0-prerelease.8</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.15.0-prerelease.8</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.15.0-prerelease.8</guid><content:encoded><![CDATA[<p>This release contains a ton of new features and some fixes.</p>
+<p>For the supplychain folks, we now support windows codesigning and several new hashing algorithms.</p>
+<p>For projects with complex repositories, we now have several new options for configuring the release process.</p>
+<h2>Windows codesigning</h2>
+<p>cargo-dist can automatically codesign Windows EXEs and MSIs using SSL.com's eSigner cloud signing service.</p>
+<p>Although there are many ways to do code signing, this process is specifically concerned with ensuring Windows SmartScreen recognizes the authenticity of the signatures and doesn't prevent your users from running the application. Otherwise, any user who downloads your application with a web browser will get a popup warning them against running it. (Alternative methods of downloading and installing, such as cargo-dist's powershell installers do not trigger SmartScreen.)</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/signing-and-attestation.html#windows-artifact-signing-with-sslcom-certificates" rel="noopener noreferrer">docs</a></li>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1036" rel="noopener noreferrer">feat: reimplement ssldotcom-windows-sign</a></li>
+</ul>
+<h2>Additional hash algorithms</h2>
+<p>The SHA-3 and BLAKE2 hash algorithms are now supported.</p>
+<p>Thanks to @sorairolake for contributing this!</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#checksum" rel="noopener noreferrer">docs</a></li>
+<li>impl @sorairolake <a href="https://github.com/axodotdev/cargo-dist/pull/1067" rel="noopener noreferrer">feat: support SHA-3 and BLAKE2</a></li>
+</ul>
+<h2>Improvements for installing tools within GitHub Actions</h2>
+<p>Previously, our installers would update the user's <code>PATH</code> for local commandline access but wouldn't set themselves up in the <code>PATH</code> within GitHub Actions. We've added a feature to the shell and Windows installers which detects if they're running within Actions and adds the newly-installed tool to <code>GITHUB_PATH</code> for future tasks within the job.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1047" rel="noopener noreferrer">feat: add paths to GITHUB_PATH if available</a></li>
+</ul>
+<h2>Custom installer output</h2>
+<p>When a shell or powershell installer runs successfully it will print out "everything's installed!", but if you want a different message that better matches your app's look-and-feel, or provides a more useful call-to-action, you can now do that with <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#install-success-msg" rel="noopener noreferrer">the <code>install-success-msg</code> setting</a>.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#install-success-msg" rel="noopener noreferrer">docs</a></li>
+<li>impl @ashleygwilliams <a href="https://github.com/axodotdev/cargo-dist/pull/1102" rel="noopener noreferrer">feat: custom success msg</a></li>
+</ul>
+<h2>Forcing prereleases to be the latest</h2>
+<p>cargo-dist has traditionally parsed the version number of new releases and used this to determine if the new release is a prerelease or a stable release. We apply some special handling to prereleases, such as marking them as prereleases within GitHub Releases. In 0.15.0, we've added the new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#force-latest" rel="noopener noreferrer"><code>force-latest</code></a> configuration flag which makes it possible to instruct cargo-dist to treat every release as the latest release regardless of its version number.</p>
+<p>This mostly exists to support projects who only plan to produce prereleases for the forseeable future, so that GitHub properly shows them in its UI.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#force-latest" rel="noopener noreferrer">docs</a></li>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1054" rel="noopener noreferrer">feat: allow always marking releases as stable</a></li>
+</ul>
+<h2>Configuring the global runner</h2>
+<p>In 0.6.0, we added support for configuring custom runners for native builds in GitHub Actions. However, until now, all other jobs still ran using our default runner. We've added a setting to the existing custom runner syntax that lets you specify what runner to use for all other jobs by using <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-custom-runners" rel="noopener noreferrer">the "global" key</a>.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-custom-runners" rel="noopener noreferrer">docs</a></li>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1055" rel="noopener noreferrer">feat: allow configuring global runner</a></li>
+</ul>
+<h2>Specify commit to publish to in external repo</h2>
+<p>In 0.14.0, we added the new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-repo" rel="noopener noreferrer"><code>github-releases-repo</code></a> configuration which allows publishing releases to an external repository rather than the one in which the CI job is running. The new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-submodule-path" rel="noopener noreferrer"><code>github-releases-submodule-path</code></a> configuration option enhances that with an additional feature: it allows specifying a submodule within the current repository to use to determine which commit to tag the new release as.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-submodule-path" rel="noopener noreferrer">docs</a></li>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1026" rel="noopener noreferrer">feat: allow specifying external commit from submodule</a></li>
+</ul>
+<h2>Fixes</h2>
+<ul>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1052" rel="noopener noreferrer">fix: improve reliability for fetching standalone updaters</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1037" rel="noopener noreferrer">fix: write correct install prefix to receipt</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1031" rel="noopener noreferrer">fix: bin_aliases should come from packages</a></li>
+<li>@Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1050" rel="noopener noreferrer">fix: repair and cleanup npm binary caching</a></li>
+<li>@sorairolake <a href="https://github.com/axodotdev/cargo-dist/pull/1066" rel="noopener noreferrer">fix: zstd file extension</a></li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.15.0-prerelease.11</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.15.0-prerelease.11</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.15.0-prerelease.11</guid><content:encoded><![CDATA[<p>This release contains a ton of new features and some fixes.</p>
+<p>For the supplychain folks, we now support windows codesigning and several new hashing algorithms.</p>
+<p>For projects with complex repositories, we now have several new options for configuring the release process.</p>
+<h2>Windows codesigning</h2>
+<p>cargo-dist can automatically codesign Windows EXEs and MSIs using SSL.com's eSigner cloud signing service.</p>
+<p>Although there are many ways to do code signing, this process is specifically concerned with ensuring Windows SmartScreen recognizes the authenticity of the signatures and doesn't prevent your users from running the application. Otherwise, any user who downloads your application with a web browser will get a popup warning them against running it. (Alternative methods of downloading and installing, such as cargo-dist's powershell installers do not trigger SmartScreen.)</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/signing-and-attestation.html#windows-artifact-signing-with-sslcom-certificates" rel="noopener noreferrer">docs</a></li>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1036" rel="noopener noreferrer">feat: reimplement ssldotcom-windows-sign</a></li>
+</ul>
+<h2>Additional hash algorithms</h2>
+<p>The SHA-3 and BLAKE2 hash algorithms are now supported.</p>
+<p>Thanks to @sorairolake for contributing this!</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#checksum" rel="noopener noreferrer">docs</a></li>
+<li>impl @sorairolake <a href="https://github.com/axodotdev/cargo-dist/pull/1067" rel="noopener noreferrer">feat: support SHA-3 and BLAKE2</a></li>
+</ul>
+<h2>Improvements for installing tools within GitHub Actions</h2>
+<p>Previously, our installers would update the user's <code>PATH</code> for local commandline access but wouldn't set themselves up in the <code>PATH</code> within GitHub Actions. We've added a feature to the shell and Windows installers which detects if they're running within Actions and adds the newly-installed tool to <code>GITHUB_PATH</code> for future tasks within the job.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1047" rel="noopener noreferrer">feat: add paths to GITHUB_PATH if available</a></li>
+</ul>
+<h2>Custom installer output</h2>
+<p>When a shell or powershell installer runs successfully it will print out "everything's installed!", but if you want a different message that better matches your app's look-and-feel, or provides a more useful call-to-action, you can now do that with <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#install-success-msg" rel="noopener noreferrer">the <code>install-success-msg</code> setting</a>.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#install-success-msg" rel="noopener noreferrer">docs</a></li>
+<li>impl @ashleygwilliams <a href="https://github.com/axodotdev/cargo-dist/pull/1102" rel="noopener noreferrer">feat: custom success msg</a></li>
+</ul>
+<h2>Forcing prereleases to be the latest</h2>
+<p>cargo-dist has traditionally parsed the version number of new releases and used this to determine if the new release is a prerelease or a stable release. We apply some special handling to prereleases, such as marking them as prereleases within GitHub Releases. In 0.15.0, we've added the new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#force-latest" rel="noopener noreferrer"><code>force-latest</code></a> configuration flag which makes it possible to instruct cargo-dist to treat every release as the latest release regardless of its version number.</p>
+<p>This mostly exists to support projects who only plan to produce prereleases for the forseeable future, so that GitHub properly shows them in its UI.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#force-latest" rel="noopener noreferrer">docs</a></li>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1054" rel="noopener noreferrer">feat: allow always marking releases as stable</a></li>
+</ul>
+<h2>Configuring the global runner</h2>
+<p>In 0.6.0, we added support for configuring custom runners for native builds in GitHub Actions. However, until now, all other jobs still ran using our default runner. We've added a setting to the existing custom runner syntax that lets you specify what runner to use for all other jobs by using <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-custom-runners" rel="noopener noreferrer">the "global" key</a>.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-custom-runners" rel="noopener noreferrer">docs</a></li>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1055" rel="noopener noreferrer">feat: allow configuring global runner</a></li>
+</ul>
+<h2>Specify commit to publish to in external repo</h2>
+<p>In 0.14.0, we added the new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-repo" rel="noopener noreferrer"><code>github-releases-repo</code></a> configuration which allows publishing releases to an external repository rather than the one in which the CI job is running. The new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-submodule-path" rel="noopener noreferrer"><code>github-releases-submodule-path</code></a> configuration option enhances that with an additional feature: it allows specifying a submodule within the current repository to use to determine which commit to tag the new release as.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-submodule-path" rel="noopener noreferrer">docs</a></li>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1026" rel="noopener noreferrer">feat: allow specifying external commit from submodule</a></li>
+</ul>
+<h2>Fixes</h2>
+<ul>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1052" rel="noopener noreferrer">fix: improve reliability for fetching standalone updaters</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1037" rel="noopener noreferrer">fix: write correct install prefix to receipt</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1031" rel="noopener noreferrer">fix: bin_aliases should come from packages</a></li>
+<li>@Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1050" rel="noopener noreferrer">fix: repair and cleanup npm binary caching</a></li>
+<li>@sorairolake <a href="https://github.com/axodotdev/cargo-dist/pull/1066" rel="noopener noreferrer">fix: zstd file extension</a></li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.15.0-prerelease.10</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.15.0-prerelease.10</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.15.0-prerelease.10</guid><content:encoded><![CDATA[<p>This release contains a ton of new features and some fixes.</p>
+<p>For the supplychain folks, we now support windows codesigning and several new hashing algorithms.</p>
+<p>For projects with complex repositories, we now have several new options for configuring the release process.</p>
+<h2>Windows codesigning</h2>
+<p>cargo-dist can automatically codesign Windows EXEs and MSIs using SSL.com's eSigner cloud signing service.</p>
+<p>Although there are many ways to do code signing, this process is specifically concerned with ensuring Windows SmartScreen recognizes the authenticity of the signatures and doesn't prevent your users from running the application. Otherwise, any user who downloads your application with a web browser will get a popup warning them against running it. (Alternative methods of downloading and installing, such as cargo-dist's powershell installers do not trigger SmartScreen.)</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/signing-and-attestation.html#windows-artifact-signing-with-sslcom-certificates" rel="noopener noreferrer">docs</a></li>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1036" rel="noopener noreferrer">feat: reimplement ssldotcom-windows-sign</a></li>
+</ul>
+<h2>Additional hash algorithms</h2>
+<p>The SHA-3 and BLAKE2 hash algorithms are now supported.</p>
+<p>Thanks to @sorairolake for contributing this!</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#checksum" rel="noopener noreferrer">docs</a></li>
+<li>impl @sorairolake <a href="https://github.com/axodotdev/cargo-dist/pull/1067" rel="noopener noreferrer">feat: support SHA-3 and BLAKE2</a></li>
+</ul>
+<h2>Improvements for installing tools within GitHub Actions</h2>
+<p>Previously, our installers would update the user's <code>PATH</code> for local commandline access but wouldn't set themselves up in the <code>PATH</code> within GitHub Actions. We've added a feature to the shell and Windows installers which detects if they're running within Actions and adds the newly-installed tool to <code>GITHUB_PATH</code> for future tasks within the job.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1047" rel="noopener noreferrer">feat: add paths to GITHUB_PATH if available</a></li>
+</ul>
+<h2>Custom installer output</h2>
+<p>When a shell or powershell installer runs successfully it will print out "everything's installed!", but if you want a different message that better matches your app's look-and-feel, or provides a more useful call-to-action, you can now do that with <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#install-success-msg" rel="noopener noreferrer">the <code>install-success-msg</code> setting</a>.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#install-success-msg" rel="noopener noreferrer">docs</a></li>
+<li>impl @ashleygwilliams <a href="https://github.com/axodotdev/cargo-dist/pull/1102" rel="noopener noreferrer">feat: custom success msg</a></li>
+</ul>
+<h2>Forcing prereleases to be the latest</h2>
+<p>cargo-dist has traditionally parsed the version number of new releases and used this to determine if the new release is a prerelease or a stable release. We apply some special handling to prereleases, such as marking them as prereleases within GitHub Releases. In 0.15.0, we've added the new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#force-latest" rel="noopener noreferrer"><code>force-latest</code></a> configuration flag which makes it possible to instruct cargo-dist to treat every release as the latest release regardless of its version number.</p>
+<p>This mostly exists to support projects who only plan to produce prereleases for the forseeable future, so that GitHub properly shows them in its UI.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#force-latest" rel="noopener noreferrer">docs</a></li>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1054" rel="noopener noreferrer">feat: allow always marking releases as stable</a></li>
+</ul>
+<h2>Configuring the global runner</h2>
+<p>In 0.6.0, we added support for configuring custom runners for native builds in GitHub Actions. However, until now, all other jobs still ran using our default runner. We've added a setting to the existing custom runner syntax that lets you specify what runner to use for all other jobs by using <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-custom-runners" rel="noopener noreferrer">the "global" key</a>.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-custom-runners" rel="noopener noreferrer">docs</a></li>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1055" rel="noopener noreferrer">feat: allow configuring global runner</a></li>
+</ul>
+<h2>Specify commit to publish to in external repo</h2>
+<p>In 0.14.0, we added the new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-repo" rel="noopener noreferrer"><code>github-releases-repo</code></a> configuration which allows publishing releases to an external repository rather than the one in which the CI job is running. The new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-submodule-path" rel="noopener noreferrer"><code>github-releases-submodule-path</code></a> configuration option enhances that with an additional feature: it allows specifying a submodule within the current repository to use to determine which commit to tag the new release as.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-submodule-path" rel="noopener noreferrer">docs</a></li>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1026" rel="noopener noreferrer">feat: allow specifying external commit from submodule</a></li>
+</ul>
+<h2>Fixes</h2>
+<ul>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1052" rel="noopener noreferrer">fix: improve reliability for fetching standalone updaters</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1037" rel="noopener noreferrer">fix: write correct install prefix to receipt</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1031" rel="noopener noreferrer">fix: bin_aliases should come from packages</a></li>
+<li>@Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1050" rel="noopener noreferrer">fix: repair and cleanup npm binary caching</a></li>
+<li>@sorairolake <a href="https://github.com/axodotdev/cargo-dist/pull/1066" rel="noopener noreferrer">fix: zstd file extension</a></li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.15.0-prerelease.7</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.15.0-prerelease.7</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.15.0-prerelease.7</guid><content:encoded><![CDATA[<p>This release contains a ton of new features and some fixes.</p>
+<p>For the supplychain folks, we now support windows codesigning and several new hashing algorithms.</p>
+<p>For projects with complex repositories, we now have several new options for configuring the release process.</p>
+<h2>Windows codesigning</h2>
+<p>cargo-dist can automatically codesign Windows EXEs and MSIs using SSL.com's eSigner cloud signing service.</p>
+<p>Although there are many ways to do code signing, this process is specifically concerned with ensuring Windows SmartScreen recognizes the authenticity of the signatures and doesn't prevent your users from running the application. Otherwise, any user who downloads your application with a web browser will get a popup warning them against running it. (Alternative methods of downloading and installing, such as cargo-dist's powershell installers do not trigger SmartScreen.)</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/signing-and-attestation.html#windows-artifact-signing-with-sslcom-certificates" rel="noopener noreferrer">docs</a></li>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1036" rel="noopener noreferrer">feat: reimplement ssldotcom-windows-sign</a></li>
+</ul>
+<h2>Additional hash algorithms</h2>
+<p>The SHA-3 and BLAKE2 hash algorithms are now supported.</p>
+<p>Thanks to @sorairolake for contributing this!</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#checksum" rel="noopener noreferrer">docs</a></li>
+<li>impl @sorairolake <a href="https://github.com/axodotdev/cargo-dist/pull/1067" rel="noopener noreferrer">feat: support SHA-3 and BLAKE2</a></li>
+</ul>
+<h2>Improvements for installing tools within GitHub Actions</h2>
+<p>Previously, our installers would update the user's <code>PATH</code> for local commandline access but wouldn't set themselves up in the <code>PATH</code> within GitHub Actions. We've added a feature to the shell and Windows installers which detects if they're running within Actions and adds the newly-installed tool to <code>GITHUB_PATH</code> for future tasks within the job.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1047" rel="noopener noreferrer">feat: add paths to GITHUB_PATH if available</a></li>
+</ul>
+<h2>Custom installer output</h2>
+<p>When a shell or powershell installer runs successfully it will print out "everything's installed!", but if you want a different message that better matches your app's look-and-feel, or provides a more useful call-to-action, you can now do that with <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#install-success-msg" rel="noopener noreferrer">the <code>install-success-msg</code> setting</a>.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#install-success-msg" rel="noopener noreferrer">docs</a></li>
+<li>impl @ashleygwilliams <a href="https://github.com/axodotdev/cargo-dist/pull/1102" rel="noopener noreferrer">feat: custom success msg</a></li>
+</ul>
+<h2>Forcing prereleases to be the latest</h2>
+<p>cargo-dist has traditionally parsed the version number of new releases and used this to determine if the new release is a prerelease or a stable release. We apply some special handling to prereleases, such as marking them as prereleases within GitHub Releases. In 0.15.0, we've added the new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#force-latest" rel="noopener noreferrer"><code>force-latest</code></a> configuration flag which makes it possible to instruct cargo-dist to treat every release as the latest release regardless of its version number.</p>
+<p>This mostly exists to support projects who only plan to produce prereleases for the forseeable future, so that GitHub properly shows them in its UI.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#force-latest" rel="noopener noreferrer">docs</a></li>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1054" rel="noopener noreferrer">feat: allow always marking releases as stable</a></li>
+</ul>
+<h2>Configuring the global runner</h2>
+<p>In 0.6.0, we added support for configuring custom runners for native builds in GitHub Actions. However, until now, all other jobs still ran using our default runner. We've added a setting to the existing custom runner syntax that lets you specify what runner to use for all other jobs by using <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-custom-runners" rel="noopener noreferrer">the "global" key</a>.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-custom-runners" rel="noopener noreferrer">docs</a></li>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1055" rel="noopener noreferrer">feat: allow configuring global runner</a></li>
+</ul>
+<h2>Specify commit to publish to in external repo</h2>
+<p>In 0.14.0, we added the new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-repo" rel="noopener noreferrer"><code>github-releases-repo</code></a> configuration which allows publishing releases to an external repository rather than the one in which the CI job is running. The new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-submodule-path" rel="noopener noreferrer"><code>github-releases-submodule-path</code></a> configuration option enhances that with an additional feature: it allows specifying a submodule within the current repository to use to determine which commit to tag the new release as.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-submodule-path" rel="noopener noreferrer">docs</a></li>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1026" rel="noopener noreferrer">feat: allow specifying external commit from submodule</a></li>
+</ul>
+<h2>Fixes</h2>
+<ul>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1052" rel="noopener noreferrer">fix: improve reliability for fetching standalone updaters</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1037" rel="noopener noreferrer">fix: write correct install prefix to receipt</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1031" rel="noopener noreferrer">fix: bin_aliases should come from packages</a></li>
+<li>@Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1050" rel="noopener noreferrer">fix: repair and cleanup npm binary caching</a></li>
+<li>@sorairolake <a href="https://github.com/axodotdev/cargo-dist/pull/1066" rel="noopener noreferrer">fix: zstd file extension</a></li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.15.0-prerelease.4</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.15.0-prerelease.4</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.15.0-prerelease.4</guid><content:encoded><![CDATA[<p>This release contains a ton of new features and some fixes.</p>
+<p>For the supplychain folks, we now support windows codesigning and several new hashing algorithms.</p>
+<p>For projects with complex repositories, we now have several new options for configuring the release process.</p>
+<h2>Windows codesigning</h2>
+<p>cargo-dist can automatically codesign Windows EXEs and MSIs using SSL.com's eSigner cloud signing service.</p>
+<p>Although there are many ways to do code signing, this process is specifically concerned with ensuring Windows SmartScreen recognizes the authenticity of the signatures and doesn't prevent your users from running the application. Otherwise, any user who downloads your application with a web browser will get a popup warning them against running it. (Alternative methods of downloading and installing, such as cargo-dist's powershell installers do not trigger SmartScreen.)</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/signing-and-attestation.html#windows-artifact-signing-with-sslcom-certificates" rel="noopener noreferrer">docs</a></li>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1036" rel="noopener noreferrer">feat: reimplement ssldotcom-windows-sign</a></li>
+</ul>
+<h2>Additional hash algorithms</h2>
+<p>The SHA-3 and BLAKE2 hash algorithms are now supported.</p>
+<p>Thanks to @sorairolake for contributing this!</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#checksum" rel="noopener noreferrer">docs</a></li>
+<li>impl @sorairolake <a href="https://github.com/axodotdev/cargo-dist/pull/1067" rel="noopener noreferrer">feat: support SHA-3 and BLAKE2</a></li>
+</ul>
+<h2>Improvements for installing tools within GitHub Actions</h2>
+<p>Previously, our installers would update the user's <code>PATH</code> for local commandline access but wouldn't set themselves up in the <code>PATH</code> within GitHub Actions. We've added a feature to the shell and Windows installers which detects if they're running within Actions and adds the newly-installed tool to <code>GITHUB_PATH</code> for future tasks within the job.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1047" rel="noopener noreferrer">feat: add paths to GITHUB_PATH if available</a></li>
+</ul>
+<h2>Custom installer output</h2>
+<p>When a shell or powershell installer runs successfully it will print out "everything's installed!", but if you want a different message that better matches your app's look-and-feel, or provides a more useful call-to-action, you can now do that with <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#install-success-msg" rel="noopener noreferrer">the <code>install-success-msg</code> setting</a>.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#install-success-msg" rel="noopener noreferrer">docs</a></li>
+<li>impl @ashleygwilliams <a href="https://github.com/axodotdev/cargo-dist/pull/1102" rel="noopener noreferrer">feat: custom success msg</a></li>
+</ul>
+<h2>Forcing prereleases to be the latest</h2>
+<p>cargo-dist has traditionally parsed the version number of new releases and used this to determine if the new release is a prerelease or a stable release. We apply some special handling to prereleases, such as marking them as prereleases within GitHub Releases. In 0.15.0, we've added the new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#force-latest" rel="noopener noreferrer"><code>force-latest</code></a> configuration flag which makes it possible to instruct cargo-dist to treat every release as the latest release regardless of its version number.</p>
+<p>This mostly exists to support projects who only plan to produce prereleases for the forseeable future, so that GitHub properly shows them in its UI.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#force-latest" rel="noopener noreferrer">docs</a></li>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1054" rel="noopener noreferrer">feat: allow always marking releases as stable</a></li>
+</ul>
+<h2>Configuring the global runner</h2>
+<p>In 0.6.0, we added support for configuring custom runners for native builds in GitHub Actions. However, until now, all other jobs still ran using our default runner. We've added a setting to the existing custom runner syntax that lets you specify what runner to use for all other jobs by using <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-custom-runners" rel="noopener noreferrer">the "global" key</a>.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-custom-runners" rel="noopener noreferrer">docs</a></li>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1055" rel="noopener noreferrer">feat: allow configuring global runner</a></li>
+</ul>
+<h2>Specify commit to publish to in external repo</h2>
+<p>In 0.14.0, we added the new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-repo" rel="noopener noreferrer"><code>github-releases-repo</code></a> configuration which allows publishing releases to an external repository rather than the one in which the CI job is running. The new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-submodule-path" rel="noopener noreferrer"><code>github-releases-submodule-path</code></a> configuration option enhances that with an additional feature: it allows specifying a submodule within the current repository to use to determine which commit to tag the new release as.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-submodule-path" rel="noopener noreferrer">docs</a></li>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1026" rel="noopener noreferrer">feat: allow specifying external commit from submodule</a></li>
+</ul>
+<h2>Fixes</h2>
+<ul>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1052" rel="noopener noreferrer">fix: improve reliability for fetching standalone updaters</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1037" rel="noopener noreferrer">fix: write correct install prefix to receipt</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1031" rel="noopener noreferrer">fix: bin_aliases should come from packages</a></li>
+<li>@Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1050" rel="noopener noreferrer">fix: repair and cleanup npm binary caching</a></li>
+<li>@sorairolake <a href="https://github.com/axodotdev/cargo-dist/pull/1066" rel="noopener noreferrer">fix: zstd file extension</a></li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.15.0-prerelease.3</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.15.0-prerelease.3</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.15.0-prerelease.3</guid><content:encoded><![CDATA[<p>This release contains a ton of new features and some fixes.</p>
+<p>For the supplychain folks, we now support windows codesigning and several new hashing algorithms.</p>
+<p>For projects with complex repositories, we now have several new options for configuring the release process.</p>
+<h2>Windows codesigning</h2>
+<p>cargo-dist can automatically codesign Windows EXEs and MSIs using SSL.com's eSigner cloud signing service.</p>
+<p>Although there are many ways to do code signing, this process is specifically concerned with ensuring Windows SmartScreen recognizes the authenticity of the signatures and doesn't prevent your users from running the application. Otherwise, any user who downloads your application with a web browser will get a popup warning them against running it. (Alternative methods of downloading and installing, such as cargo-dist's powershell installers do not trigger SmartScreen.)</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/signing-and-attestation.html#windows-artifact-signing-with-sslcom-certificates" rel="noopener noreferrer">docs</a></li>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1036" rel="noopener noreferrer">feat: reimplement ssldotcom-windows-sign</a></li>
+</ul>
+<h2>Additional hash algorithms</h2>
+<p>The SHA-3 and BLAKE2 hash algorithms are now supported.</p>
+<p>Thanks to @sorairolake for contributing this!</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#checksum" rel="noopener noreferrer">docs</a></li>
+<li>impl @sorairolake <a href="https://github.com/axodotdev/cargo-dist/pull/1067" rel="noopener noreferrer">feat: support SHA-3 and BLAKE2</a></li>
+</ul>
+<h2>Improvements for installing tools within GitHub Actions</h2>
+<p>Previously, our installers would update the user's <code>PATH</code> for local commandline access but wouldn't set themselves up in the <code>PATH</code> within GitHub Actions. We've added a feature to the shell and Windows installers which detects if they're running within Actions and adds the newly-installed tool to <code>GITHUB_PATH</code> for future tasks within the job.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1047" rel="noopener noreferrer">feat: add paths to GITHUB_PATH if available</a></li>
+</ul>
+<h2>Custom installer output</h2>
+<p>When a shell or powershell installer runs successfully it will print out "everything's installed!", but if you want a different message that better matches your app's look-and-feel, or provides a more useful call-to-action, you can now do that with <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#install-success-msg" rel="noopener noreferrer">the <code>install-success-msg</code> setting</a>.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#install-success-msg" rel="noopener noreferrer">docs</a></li>
+<li>impl @ashleygwilliams <a href="https://github.com/axodotdev/cargo-dist/pull/1102" rel="noopener noreferrer">feat: custom success msg</a></li>
+</ul>
+<h2>Forcing prereleases to be the latest</h2>
+<p>cargo-dist has traditionally parsed the version number of new releases and used this to determine if the new release is a prerelease or a stable release. We apply some special handling to prereleases, such as marking them as prereleases within GitHub Releases. In 0.15.0, we've added the new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#force-latest" rel="noopener noreferrer"><code>force-latest</code></a> configuration flag which makes it possible to instruct cargo-dist to treat every release as the latest release regardless of its version number.</p>
+<p>This mostly exists to support projects who only plan to produce prereleases for the forseeable future, so that GitHub properly shows them in its UI.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#force-latest" rel="noopener noreferrer">docs</a></li>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1054" rel="noopener noreferrer">feat: allow always marking releases as stable</a></li>
+</ul>
+<h2>Configuring the global runner</h2>
+<p>In 0.6.0, we added support for configuring custom runners for native builds in GitHub Actions. However, until now, all other jobs still ran using our default runner. We've added a setting to the existing custom runner syntax that lets you specify what runner to use for all other jobs by using <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-custom-runners" rel="noopener noreferrer">the "global" key</a>.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-custom-runners" rel="noopener noreferrer">docs</a></li>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1055" rel="noopener noreferrer">feat: allow configuring global runner</a></li>
+</ul>
+<h2>Specify commit to publish to in external repo</h2>
+<p>In 0.14.0, we added the new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-repo" rel="noopener noreferrer"><code>github-releases-repo</code></a> configuration which allows publishing releases to an external repository rather than the one in which the CI job is running. The new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-submodule-path" rel="noopener noreferrer"><code>github-releases-submodule-path</code></a> configuration option enhances that with an additional feature: it allows specifying a submodule within the current repository to use to determine which commit to tag the new release as.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-submodule-path" rel="noopener noreferrer">docs</a></li>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1026" rel="noopener noreferrer">feat: allow specifying external commit from submodule</a></li>
+</ul>
+<h2>Fixes</h2>
+<ul>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1052" rel="noopener noreferrer">fix: improve reliability for fetching standalone updaters</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1037" rel="noopener noreferrer">fix: write correct install prefix to receipt</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1031" rel="noopener noreferrer">fix: bin_aliases should come from packages</a></li>
+<li>@Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1050" rel="noopener noreferrer">fix: repair and cleanup npm binary caching</a></li>
+<li>@sorairolake <a href="https://github.com/axodotdev/cargo-dist/pull/1066" rel="noopener noreferrer">fix: zstd file extension</a></li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.15.0-prerelease.2</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.15.0-prerelease.2</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.15.0-prerelease.2</guid><content:encoded><![CDATA[<p>This release contains a ton of new features and some fixes.</p>
+<p>For the supplychain folks, we now support windows codesigning and several new hashing algorithms.</p>
+<p>For projects with complex repositories, we now have several new options for configuring the release process.</p>
+<h2>Windows codesigning</h2>
+<p>cargo-dist can automatically codesign Windows EXEs and MSIs using SSL.com's eSigner cloud signing service.</p>
+<p>Although there are many ways to do code signing, this process is specifically concerned with ensuring Windows SmartScreen recognizes the authenticity of the signatures and doesn't prevent your users from running the application. Otherwise, any user who downloads your application with a web browser will get a popup warning them against running it. (Alternative methods of downloading and installing, such as cargo-dist's powershell installers do not trigger SmartScreen.)</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/signing-and-attestation.html#windows-artifact-signing-with-sslcom-certificates" rel="noopener noreferrer">docs</a></li>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1036" rel="noopener noreferrer">feat: reimplement ssldotcom-windows-sign</a></li>
+</ul>
+<h2>Additional hash algorithms</h2>
+<p>The SHA-3 and BLAKE2 hash algorithms are now supported.</p>
+<p>Thanks to @sorairolake for contributing this!</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#checksum" rel="noopener noreferrer">docs</a></li>
+<li>impl @sorairolake <a href="https://github.com/axodotdev/cargo-dist/pull/1067" rel="noopener noreferrer">feat: support SHA-3 and BLAKE2</a></li>
+</ul>
+<h2>Improvements for installing tools within GitHub Actions</h2>
+<p>Previously, our installers would update the user's <code>PATH</code> for local commandline access but wouldn't set themselves up in the <code>PATH</code> within GitHub Actions. We've added a feature to the shell and Windows installers which detects if they're running within Actions and adds the newly-installed tool to <code>GITHUB_PATH</code> for future tasks within the job.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1047" rel="noopener noreferrer">feat: add paths to GITHUB_PATH if available</a></li>
+</ul>
+<h2>Custom installer output</h2>
+<p>When a shell or powershell installer runs successfully it will print out "everything's installed!", but if you want a different message that better matches your app's look-and-feel, or provides a more useful call-to-action, you can now do that with <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#install-success-msg" rel="noopener noreferrer">the <code>install-success-msg</code> setting</a>.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#install-success-msg" rel="noopener noreferrer">docs</a></li>
+<li>impl @ashleygwilliams <a href="https://github.com/axodotdev/cargo-dist/pull/1102" rel="noopener noreferrer">feat: custom success msg</a></li>
+</ul>
+<h2>Forcing prereleases to be the latest</h2>
+<p>cargo-dist has traditionally parsed the version number of new releases and used this to determine if the new release is a prerelease or a stable release. We apply some special handling to prereleases, such as marking them as prereleases within GitHub Releases. In 0.15.0, we've added the new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#force-latest" rel="noopener noreferrer"><code>force-latest</code></a> configuration flag which makes it possible to instruct cargo-dist to treat every release as the latest release regardless of its version number.</p>
+<p>This mostly exists to support projects who only plan to produce prereleases for the forseeable future, so that GitHub properly shows them in its UI.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#force-latest" rel="noopener noreferrer">docs</a></li>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1054" rel="noopener noreferrer">feat: allow always marking releases as stable</a></li>
+</ul>
+<h2>Configuring the global runner</h2>
+<p>In 0.6.0, we added support for configuring custom runners for native builds in GitHub Actions. However, until now, all other jobs still ran using our default runner. We've added a setting to the existing custom runner syntax that lets you specify what runner to use for all other jobs by using <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-custom-runners" rel="noopener noreferrer">the "global" key</a>.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-custom-runners" rel="noopener noreferrer">docs</a></li>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1055" rel="noopener noreferrer">feat: allow configuring global runner</a></li>
+</ul>
+<h2>Specify commit to publish to in external repo</h2>
+<p>In 0.14.0, we added the new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-repo" rel="noopener noreferrer"><code>github-releases-repo</code></a> configuration which allows publishing releases to an external repository rather than the one in which the CI job is running. The new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-submodule-path" rel="noopener noreferrer"><code>github-releases-submodule-path</code></a> configuration option enhances that with an additional feature: it allows specifying a submodule within the current repository to use to determine which commit to tag the new release as.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-submodule-path" rel="noopener noreferrer">docs</a></li>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1026" rel="noopener noreferrer">feat: allow specifying external commit from submodule</a></li>
+</ul>
+<h2>Fixes</h2>
+<ul>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1052" rel="noopener noreferrer">fix: improve reliability for fetching standalone updaters</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1037" rel="noopener noreferrer">fix: write correct install prefix to receipt</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1031" rel="noopener noreferrer">fix: bin_aliases should come from packages</a></li>
+<li>@Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1050" rel="noopener noreferrer">fix: repair and cleanup npm binary caching</a></li>
+<li>@sorairolake <a href="https://github.com/axodotdev/cargo-dist/pull/1066" rel="noopener noreferrer">fix: zstd file extension</a></li>
+</ul>
+]]></content:encoded></item><item><title>Version 0.15.0-prerelease.1</title><link>http://127.0.0.1:7979/cargo-dist/changelog/v0.15.0-prerelease.1</link><category domain="https://github.com/axodotdev/cargo-dist">cargo-dist Changelog</category><guid>http://127.0.0.1:7979/cargo-dist/changelog/v0.15.0-prerelease.1</guid><content:encoded><![CDATA[<p>This release contains a ton of new features and some fixes.</p>
+<p>For the supplychain folks, we now support windows codesigning and several new hashing algorithms.</p>
+<p>For projects with complex repositories, we now have several new options for configuring the release process.</p>
+<h2>Windows codesigning</h2>
+<p>cargo-dist can automatically codesign Windows EXEs and MSIs using SSL.com's eSigner cloud signing service.</p>
+<p>Although there are many ways to do code signing, this process is specifically concerned with ensuring Windows SmartScreen recognizes the authenticity of the signatures and doesn't prevent your users from running the application. Otherwise, any user who downloads your application with a web browser will get a popup warning them against running it. (Alternative methods of downloading and installing, such as cargo-dist's powershell installers do not trigger SmartScreen.)</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/signing-and-attestation.html#windows-artifact-signing-with-sslcom-certificates" rel="noopener noreferrer">docs</a></li>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1036" rel="noopener noreferrer">feat: reimplement ssldotcom-windows-sign</a></li>
+</ul>
+<h2>Additional hash algorithms</h2>
+<p>The SHA-3 and BLAKE2 hash algorithms are now supported.</p>
+<p>Thanks to @sorairolake for contributing this!</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#checksum" rel="noopener noreferrer">docs</a></li>
+<li>impl @sorairolake <a href="https://github.com/axodotdev/cargo-dist/pull/1067" rel="noopener noreferrer">feat: support SHA-3 and BLAKE2</a></li>
+</ul>
+<h2>Improvements for installing tools within GitHub Actions</h2>
+<p>Previously, our installers would update the user's <code>PATH</code> for local commandline access but wouldn't set themselves up in the <code>PATH</code> within GitHub Actions. We've added a feature to the shell and Windows installers which detects if they're running within Actions and adds the newly-installed tool to <code>GITHUB_PATH</code> for future tasks within the job.</p>
+<ul>
+<li>impl @Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1047" rel="noopener noreferrer">feat: add paths to GITHUB_PATH if available</a></li>
+</ul>
+<h2>Custom installer output</h2>
+<p>When a shell or powershell installer runs successfully it will print out "everything's installed!", but if you want a different message that better matches your app's look-and-feel, or provides a more useful call-to-action, you can now do that with <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#install-success-msg" rel="noopener noreferrer">the <code>install-success-msg</code> setting</a>.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#install-success-msg" rel="noopener noreferrer">docs</a></li>
+<li>impl @ashleygwilliams <a href="https://github.com/axodotdev/cargo-dist/pull/1102" rel="noopener noreferrer">feat: custom success msg</a></li>
+</ul>
+<h2>Forcing prereleases to be the latest</h2>
+<p>cargo-dist has traditionally parsed the version number of new releases and used this to determine if the new release is a prerelease or a stable release. We apply some special handling to prereleases, such as marking them as prereleases within GitHub Releases. In 0.15.0, we've added the new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#force-latest" rel="noopener noreferrer"><code>force-latest</code></a> configuration flag which makes it possible to instruct cargo-dist to treat every release as the latest release regardless of its version number.</p>
+<p>This mostly exists to support projects who only plan to produce prereleases for the forseeable future, so that GitHub properly shows them in its UI.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#force-latest" rel="noopener noreferrer">docs</a></li>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1054" rel="noopener noreferrer">feat: allow always marking releases as stable</a></li>
+</ul>
+<h2>Configuring the global runner</h2>
+<p>In 0.6.0, we added support for configuring custom runners for native builds in GitHub Actions. However, until now, all other jobs still ran using our default runner. We've added a setting to the existing custom runner syntax that lets you specify what runner to use for all other jobs by using <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-custom-runners" rel="noopener noreferrer">the "global" key</a>.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-custom-runners" rel="noopener noreferrer">docs</a></li>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1055" rel="noopener noreferrer">feat: allow configuring global runner</a></li>
+</ul>
+<h2>Specify commit to publish to in external repo</h2>
+<p>In 0.14.0, we added the new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-repo" rel="noopener noreferrer"><code>github-releases-repo</code></a> configuration which allows publishing releases to an external repository rather than the one in which the CI job is running. The new <a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-submodule-path" rel="noopener noreferrer"><code>github-releases-submodule-path</code></a> configuration option enhances that with an additional feature: it allows specifying a submodule within the current repository to use to determine which commit to tag the new release as.</p>
+<ul>
+<li><a href="https://opensource.axo.dev/cargo-dist/book/reference/config.html#github-releases-submodule-path" rel="noopener noreferrer">docs</a></li>
+<li>impl @mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1026" rel="noopener noreferrer">feat: allow specifying external commit from submodule</a></li>
+</ul>
+<h2>Fixes</h2>
+<ul>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1052" rel="noopener noreferrer">fix: improve reliability for fetching standalone updaters</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1037" rel="noopener noreferrer">fix: write correct install prefix to receipt</a></li>
+<li>@mistydemeo <a href="https://github.com/axodotdev/cargo-dist/pull/1031" rel="noopener noreferrer">fix: bin_aliases should come from packages</a></li>
+<li>@Gankra <a href="https://github.com/axodotdev/cargo-dist/pull/1050" rel="noopener noreferrer">fix: repair and cleanup npm binary caching</a></li>
+<li>@sorairolake <a href="https://github.com/axodotdev/cargo-dist/pull/1066" rel="noopener noreferrer">fix: zstd file extension</a></li>
+</ul>
+]]></content:encoded></item></channel></rss>
